@@ -1,4 +1,4 @@
-﻿import React, { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { usePOS } from '../../context/POSContext';
 import { StoreSettings, BusinessType } from '../../types';
 import { exportDatabaseBackup, importDatabaseBackup, db } from '../../db';
@@ -578,21 +578,32 @@ export const SettingsView: React.FC = () => {
           </div>
         </div>
 
+        {/* Compliance & Regulatory Disclaimer (PBI / PJP Bank Indonesia) */}
+        <div className="p-3.5 rounded-xl bg-amber-950/30 border border-amber-800/40 text-amber-200 text-xs space-y-1.5">
+          <div className="flex items-center gap-2 font-bold text-amber-400">
+            <ShieldCheck className="w-4 h-4" />
+            <span>Mode Simulasi Token Tertutup (Digerbang Kepatuhan Regulasi BI)</span>
+          </div>
+          <p className="text-amber-200/80 leading-relaxed text-[11px]">
+            Sistem Koin Kasirio dirancang sebagai <em>Closed-Loop Service Token</em> khusus penukaran masa aktif Pro internal (bukan alat pembayaran umum). Tombol transaksi di bawah ini beroperasi dalam status <strong>Simulasi Sandbox</strong> untuk verifikasi teknis tanpa menarik dana riil, menunggu finalisasi audit kepatuhan regulasi PBI/PJP Bank Indonesia.
+          </p>
+        </div>
+
         {/* Quick Top-up & Extend buttons */}
-        <div className="flex flex-wrap gap-2 pt-2">
+        <div className="flex flex-wrap gap-2 pt-1">
           <button
             type="button"
             onClick={() => topupKoin(100, 100000)}
-            className="px-3 py-2 rounded-xl bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 text-yellow-300 font-bold text-xs"
+            className="px-3.5 py-2 rounded-xl bg-yellow-500/10 hover:bg-yellow-500/20 border border-yellow-500/30 text-yellow-300 font-bold text-xs flex items-center gap-1.5 transition-colors"
           >
-            + Top-up 100 Koin (Rp 100.000)
+            <span>+ Simulasi Top-up 100 Koin (Rp 100.000)</span>
           </button>
           <button
             type="button"
             onClick={() => extendProWithKoin(50, 30)}
-            className="px-3 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold text-xs"
+            className="px-3.5 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center gap-1.5 transition-colors"
           >
-            Perpanjang Pro 30 Hari (50 Koin)
+            <span>Tukar 50 Koin (Pro 30 Hari)</span>
           </button>
         </div>
       </div>

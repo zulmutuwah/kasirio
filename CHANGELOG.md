@@ -5,6 +5,14 @@ Format penulisan mengikuti standar [Keep a Changelog](https://keepachangelog.com
 
 ---
 
+## [0.3.0] - 2026-09-17
+### Added - Sub-Fase 1c (AI & Monetisasi Terbimbing)
+- **Backend Proxy Tipis Gemini AI (`server.ts` & `/api/parse-nota`):** Panggilan multimodal vision Gemini dialihkan ke backend proxy Express lokal agar `GEMINI_API_KEY` tidak bocor ke browser client bundle publik, dilengkapi fallback cerdas offline.
+- **AI OCR Nota Pasar Tradisional (`AiNotaOcrModal.tsx`):** Alur ekstraksi belanjaan kulakan berbasis filosofi *Human-in-the-Loop* — kasir dapat meninjau, mengedit tulisan tangan pasar, dan memvalidasi kuantitas serta HPP sebelum otomatis menambah stok toko dan mencatat mutasi ledger `stockLogs`.
+- **Integrasi Tombol OCR di Inventori:** Tombol aksi cepat *"AI Nota Pasar (OCR)"* dengan gaya gradien di samping manajemen kategori dan produk pada [InventoryView.tsx](src/components/inventory/InventoryView.tsx).
+- **Legal Gating & Sandbox Koin Kasirio:** Banner kepatuhan hukum (*compliance disclaimer*) pada dompet Koin Kasirio di [SettingsView.tsx](src/components/settings/SettingsView.tsx) yang menegaskan model *Closed-Loop Service Token* dan mode simulasi teknis sebelum audit regulasi PBI/PJP Bank Indonesia selesai.
+- **Automated Test Suite:** Penambahan unit test Vitest untuk validasi data ekstraksi AI nota dan alur penambahan stok inventori (20 unit tests lolos).
+
 ## [0.2.0] - 2026-09-17
 ### Added - Sub-Fase 1b (Alur Kasir Inti & Hardware)
 - **Barcode Buffer Scanner (`useBarcodeScanner`):** Listener global dengan pengukuran latensi inter-keystroke (<50ms) untuk mendeteksi scanner fisik USB/Bluetooth secara presisi dan menambahkan barang langsung ke keranjang belanja.

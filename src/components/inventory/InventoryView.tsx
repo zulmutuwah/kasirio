@@ -16,8 +16,10 @@ import {
   RefreshCw,
   Image as ImageIcon,
   TrendingUp,
-  Package
+  Package,
+  Sparkles,
 } from 'lucide-react';
+import { AiNotaOcrModal } from './AiNotaOcrModal';
 
 interface InventoryViewProps {
   isAddProductOpenExternal?: boolean;
@@ -44,6 +46,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
   const [productForStockAdj, setProductForStockAdj] = useState<Product | null>(null);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isOcrModalOpen, setIsOcrModalOpen] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<'katalog' | 'riwayatStok'>('katalog');
 
   // Handle external modal trigger from header
@@ -94,6 +97,16 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           >
             <FolderPlus className="w-4 h-4 text-teal-400" />
             <span>Kelola Kategori</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsOcrModalOpen(true)}
+            className="px-3.5 py-2 bg-purple-950/80 hover:bg-purple-900 border border-purple-700/60 text-purple-200 text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all shadow-md shadow-purple-950/40"
+            title="Pindai Nota Pasar Tradisional dengan AI Gemini Vision"
+          >
+            <Sparkles className="w-4 h-4 text-purple-400" />
+            <span>AI Nota Pasar</span>
           </button>
 
           <button
@@ -436,6 +449,12 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       <CategoryManageModal
         isOpen={isCategoryModalOpen}
         onClose={() => setIsCategoryModalOpen(false)}
+      />
+
+      {/* AI OCR Nota Pasar Review Modal */}
+      <AiNotaOcrModal
+        isOpen={isOcrModalOpen}
+        onClose={() => setIsOcrModalOpen(false)}
       />
     </div>
   );
