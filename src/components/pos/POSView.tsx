@@ -5,6 +5,7 @@ import { CartPanel } from './CartPanel';
 import { PaymentModal } from './PaymentModal';
 import { ReceiptModal } from './ReceiptModal';
 import { BarcodeScannerModal } from './BarcodeScannerModal';
+import { useBarcodeScanner } from '../../utils/useBarcodeScanner';
 import {
   Search,
   LayoutGrid,
@@ -34,14 +35,44 @@ export const POSView: React.FC<POSViewProps> = ({
     selectedCustomer,
     activeReceiptTransaction,
     setActiveReceiptTransaction,
+    settings,
     showToast,
   } = usePOS();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('ALL');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(
+    settings.businessType === 'FNB' ? 'grid' : 'list'
+  );
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
+
+  // Global Hardware Barcode Scanner Listener (<50ms inter-character timing)
+  useBarcodeScanner({
+    onScan: (scannedCode) => {
+      const code = scannedCode.trim().toLowerCase();
+      const matched = products.find(
+        (p) =>
+          (p.barcode && p.barcode.toLowerCase() === code) ||
+          p.sku.toLowerCase() === code ||
+          p.name.toLowerCase() === code
+      );
+
+      if (matched) {
+        if (matched.stock <= 0) {
+          showToast(`Stok ${matched.name} habis!`, 'error');
+        } else {
+          addToCart(matched);
+          showToast(`Scan barcode: ${matched.name} (+1)`, 'success');
+        }
+      } else {
+        showToast(`Barcode "${scannedCode}" tidak ditemukan`, 'error');
+      }
+    },
+    enabled: true,
+    maxIntervalMs: 50,
+    minLength: 3,
+  });
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -199,6 +230,26 @@ export const POSView: React.FC<POSViewProps> = ({
             </div>
           </div>
         </form>
+
+        {/* Business Mode & Hardware Barcode Status Bar */}
+        <div className="flex items-center justify-between text-[11px] px-1 shrink-0">
+          <div className="flex items-center gap-1.5 font-medium text-slate-500">
+            <span className="font-bold text-slate-800">
+              {settings.businessType === 'FNB' ? 'Mode F&B' : 'Mode Ritel'}
+            </span>
+            <span className="text-slate-300">•</span>
+            <span>{viewMode === 'grid' ? 'Grid Gambar' : 'Daftar Barcode'}</span>
+          </div>
+
+          <div
+            className="flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full"
+            title="Scanner barcode fisik USB/Bluetooth aktif secara global (<50ms filter)"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <Barcode className="w-3 h-3 text-emerald-600" />
+            <span>Scanner Aktif</span>
+          </div>
+        </div>
 
         {/* Category Tabs (Horizontal Scrollable Pills) */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 shrink-0 no-scrollbar">

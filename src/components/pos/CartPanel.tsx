@@ -13,8 +13,11 @@ import {
   Tag,
   Info,
   FileText,
-  CreditCard
+  CreditCard,
+  Clock,
+  PauseCircle,
 } from 'lucide-react';
+import { RecallModal } from './RecallModal';
 
 interface CartPanelProps {
   onOpenPaymentModal: () => void;
@@ -35,13 +38,18 @@ export const CartPanel: React.FC<CartPanelProps> = ({
     setSelectedCustomer,
     cartOrderDiscount,
     setCartOrderDiscount,
+    suspendedCarts,
+    holdCurrentCart,
     settings,
     showToast,
   } = usePOS();
 
   const [editingItemDiscountId, setEditingItemDiscountId] = useState<string | null>(null);
   const [showOrderDiscountInput, setShowOrderDiscountInput] = useState(false);
-  const [showNotesModal, setShowNotesModal] = useState(false);
+  const [showHoldModal, setShowHoldModal] = useState(false);
+  const [showRecallModal, setShowRecallModal] = useState(false);
+  const [holdLabel, setHoldLabel] = useState('');
+  const [holdNotes, setHoldNotes] = useState('');
 
   // Subtotal calculation
   const subtotal = cart.reduce((acc, item) => {
@@ -94,15 +102,46 @@ export const CartPanel: React.FC<CartPanelProps> = ({
           </div>
         </div>
 
-        {cart.length > 0 && (
-          <button
-            onClick={clearCart}
-            className="text-xs text-rose-600 hover:text-rose-700 flex items-center gap-1 font-semibold px-2.5 py-1 rounded-xl bg-rose-50 border border-rose-200 transition-colors"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Reset</span>
-          </button>
-        )}
+        <div className="flex items-center gap-1.5">
+          {suspendedCarts.length > 0 && (
+            <button
+              onClick={() => setShowRecallModal(true)}
+              className="text-xs text-amber-800 hover:text-amber-900 flex items-center gap-1.5 font-bold px-2.5 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 border border-amber-300 transition-colors shadow-xs"
+              title="Lihat pesanan yang sedang ditahan (Recall)"
+            >
+              <Clock className="w-3.5 h-3.5 text-amber-700" />
+              <span>Tertahan</span>
+              <span className="bg-amber-600 text-white rounded-full text-[10px] w-4 h-4 flex items-center justify-center font-mono font-bold">
+                {suspendedCarts.length}
+              </span>
+            </button>
+          )}
+
+          {cart.length > 0 && (
+            <button
+              onClick={() => {
+                setHoldLabel(selectedCustomer ? `Pelanggan: ${selectedCustomer.name}` : `Pesanan #${suspendedCarts.length + 1}`);
+                setHoldNotes('');
+                setShowHoldModal(true);
+              }}
+              className="text-xs text-amber-800 hover:text-amber-900 flex items-center gap-1 font-bold px-2 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors"
+              title="Tahan transaksi saat ini"
+            >
+              <PauseCircle className="w-3.5 h-3.5 text-amber-600" />
+              <span>Tahan</span>
+            </button>
+          )}
+
+          {cart.length > 0 && (
+            <button
+              onClick={clearCart}
+              className="text-xs text-rose-600 hover:text-rose-700 flex items-center gap-1 font-semibold px-2.5 py-1.5 rounded-xl bg-rose-50 border border-rose-200 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Reset</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Cart Items List (Scrollable) */}
@@ -297,16 +336,18 @@ export const CartPanel: React.FC<CartPanelProps> = ({
               </span>
             </button>
 
-            {/* Hold / Catatan Button */}
+            {/* Hold Pesanan Button */}
             <button
               onClick={() => {
-                setShowNotesModal(true);
+                setHoldLabel(selectedCustomer ? `Pelanggan: ${selectedCustomer.name}` : `Pesanan #${suspendedCarts.length + 1}`);
+                setHoldNotes('');
+                setShowHoldModal(true);
               }}
-              className="flex items-center gap-1 text-[11px] font-bold text-slate-700 hover:text-sky-700 px-2.5 py-1 rounded-lg bg-white border border-slate-200 shrink-0 shadow-2xs transition-colors"
-              title="Catatan Transaksi / Simpan Sementara"
+              className="flex items-center gap-1 text-[11px] font-bold text-slate-700 hover:text-amber-700 px-2.5 py-1 rounded-lg bg-white border border-slate-200 shrink-0 shadow-2xs transition-colors"
+              title="Tahan Pesanan (Hold)"
             >
-              <FileText className="w-3.5 h-3.5 text-sky-600" />
-              <span>Hold / Catatan</span>
+              <PauseCircle className="w-3.5 h-3.5 text-amber-600" />
+              <span>Tahan Pesanan</span>
             </button>
           </div>
 
@@ -408,53 +449,84 @@ export const CartPanel: React.FC<CartPanelProps> = ({
 
       </div>
 
-      {/* Hold / Catatan Modal */}
-      {showNotesModal && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-sm w-full p-5 text-slate-900 shadow-2xl space-y-4">
+      {/* Hold Pesanan Modal */}
+      {showHoldModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-sm w-full p-5 text-slate-900 shadow-2xl space-y-4 animate-in fade-in-50 zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
               <div className="flex items-center gap-2 font-bold text-sm text-slate-900">
-                <FileText className="w-4 h-4 text-sky-600" />
-                <span>Hold / Catatan Pesanan</span>
+                <PauseCircle className="w-4 h-4 text-amber-600" />
+                <span>Tahan Pesanan (Hold)</span>
               </div>
               <button
-                onClick={() => setShowNotesModal(false)}
+                onClick={() => setShowHoldModal(false)}
                 className="text-slate-400 hover:text-slate-700 p-1"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-500">
-              Tambahkan catatan atau nomor meja untuk transaksi ini:
+            <p className="text-xs text-slate-600">
+              Simpan antrean sementara agar kasir dapat melayani pelanggan berikutnya tanpa menghapus item belanjaan saat ini:
             </p>
 
-            <textarea
-              rows={3}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-sky-500 font-medium"
-              placeholder="Contoh: Meja 05 / Bungkus tanpa sambal..."
-            />
+            <div className="space-y-3">
+              <div>
+                <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                  Label Antrean / No. Meja / Nama
+                </label>
+                <input
+                  type="text"
+                  value={holdLabel}
+                  onChange={(e) => setHoldLabel(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 font-bold focus:outline-none focus:border-amber-500 focus:bg-white"
+                  placeholder="Contoh: Meja 4 / Pak Bambang"
+                  autoFocus
+                />
+              </div>
 
-            <div className="flex justify-end gap-2 pt-2">
+              <div>
+                <label className="text-[11px] font-bold text-slate-700 block mb-1">
+                  Catatan Tambahan (Opsional)
+                </label>
+                <textarea
+                  rows={2}
+                  value={holdNotes}
+                  onChange={(e) => setHoldNotes(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white"
+                  placeholder="Contoh: Pembeli ambil uang di ATM..."
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
               <button
-                onClick={() => setShowNotesModal(false)}
-                className="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-600 text-xs font-semibold"
+                type="button"
+                onClick={() => setShowHoldModal(false)}
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold"
               >
-                Tutup
+                Batal
               </button>
               <button
-                onClick={() => {
-                  setShowNotesModal(false);
-                  showToast('Catatan berhasil disimpan pada transaksi ini', 'success');
+                type="button"
+                onClick={async () => {
+                  await holdCurrentCart(holdLabel.trim() || undefined, holdNotes.trim() || undefined);
+                  setShowHoldModal(false);
                 }}
-                className="px-4 py-1.5 rounded-xl bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold shadow-xs"
+                className="px-4 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold shadow-xs transition-colors"
               >
-                Simpan
+                Tahan Pesanan
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Recall Pesanan Modal */}
+      <RecallModal
+        isOpen={showRecallModal}
+        onClose={() => setShowRecallModal(false)}
+      />
 
     </div>
   );
