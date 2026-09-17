@@ -25,6 +25,21 @@ app.use('/api/payment', paymentRouter);
 app.use('/api/notifications', notificationRouter);
 app.use('/api/ai', aiReorderRouter);
 
+// Root landing message
+app.get('/', (req, res) => {
+  res.send(`
+    <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 60px auto; padding: 32px; background: #0f172a; color: #f8fafc; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+      <h2 style="color: #2dd4bf; margin-top: 0;">✅ Kasirio Backend API Aktif!</h2>
+      <p style="color: #94a3b8; line-height: 1.6;">Server backend proxy Express (Port 3001) sedang berjalan normal melayani QRIS, Webhook Soundbox, WhatsApp, Sync Cloud, dan AI Engine.</p>
+      <div style="margin-top: 24px;">
+        <a href="http://localhost:3000" style="display: inline-block; background: #14b8a6; color: #020617; font-weight: bold; text-decoration: none; padding: 12px 24px; border-radius: 10px;">
+          👉 Buka Aplikasi Kasir POS (localhost:3000)
+        </a>
+      </div>
+    </div>
+  `);
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Product, StockLog, SmartReorderRecommendation } from '../../types';
 import { formatRupiah } from '../../utils/formatters';
-import { calculateReorderMetrics } from '../../server/routes/aiReorderRoutes';
+import { calculateReorderMetrics } from '../../utils/reorderMetrics';
 import {
   Sparkles,
   AlertOctagon,
