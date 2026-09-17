@@ -216,6 +216,55 @@ export const OwnerDashboardView: React.FC = () => {
     }
   };
 
+  const handleQuickDemoLogin = async () => {
+    setIsAuthenticating(true);
+    setErrorMsg(null);
+    try {
+      // Coba login demo dahulu
+      let res = await fetch(`${baseUrl}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'owner@kasirio.com',
+          password: 'password123',
+        }),
+      });
+
+      // Jika belum terdaftar di database lokal, otomatis registrasi akun demo Owner
+      if (!res.ok) {
+        res = await fetch(`${baseUrl}/api/auth/register-tenant`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tenantName: settings.storeName || 'Kasirio Store',
+            ownerName: 'Pemilik Toko (Demo)',
+            email: 'owner@kasirio.com',
+            password: 'password123',
+            pin: '123456',
+          }),
+        });
+      }
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal masuk akun demo');
+
+      await updateSettings({
+        cloudSyncEnabled: true,
+        authToken: data.token,
+        tenantId: data.tenant?.id || data.user?.tenantId,
+        tenantName: data.tenant?.name || settings.storeName,
+        outletId: data.outlet?.id,
+        outletName: data.outlet?.name,
+      });
+
+      showToast('Berhasil masuk sebagai Owner Demo!');
+    } catch (err: any) {
+      setErrorMsg(err.message);
+    } finally {
+      setIsAuthenticating(false);
+    }
+  };
+
   const handleStockTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!transferSource || !transferTarget || !transferProductId || transferQty <= 0) {
@@ -524,8 +573,9 @@ export const OwnerDashboardView: React.FC = () => {
             </button>
           </form>
 
-          <div className="mt-6 pt-4 border-t border-slate-100 text-center">
+          <div className="mt-6 pt-4 border-t border-slate-100 flex flex-col items-center gap-3">
             <button
+              type="button"
               onClick={() => {
                 setIsRegisterMode(!isRegisterMode);
                 setErrorMsg(null);
@@ -534,7 +584,17 @@ export const OwnerDashboardView: React.FC = () => {
             >
               {isRegisterMode
                 ? 'Sudah punya akun? Masuk di sini'
-                : 'Belum terhubung ke Cloud? Daftarkan Toko Baru'}
+                : 'Belum punya akun? Daftarkan Toko Baru'}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleQuickDemoLogin}
+              disabled={isAuthenticating}
+              className="w-full py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold border border-slate-200 flex items-center justify-center gap-1.5 transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+              <span>Masuk Cepat Akun Demo Owner (1-Klik)</span>
             </button>
           </div>
         </div>
