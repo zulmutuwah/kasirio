@@ -5,18 +5,26 @@ import { X, ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
 
 interface StockAdjustmentModalProps {
   product: Product | null;
+  initialQuantity?: number;
+  initialType?: 'IN' | 'OUT' | 'SET';
   onClose: () => void;
 }
 
 export const StockAdjustmentModal: React.FC<StockAdjustmentModalProps> = ({
   product,
+  initialQuantity,
+  initialType,
   onClose,
 }) => {
   const { adjustStock } = usePOS();
 
-  const [type, setType] = useState<'IN' | 'OUT' | 'SET'>('IN');
-  const [quantityInput, setQuantityInput] = useState<number | ''>('');
-  const [reason, setReason] = useState('');
+  const [type, setType] = useState<'IN' | 'OUT' | 'SET'>(initialType || 'IN');
+  const [quantityInput, setQuantityInput] = useState<number | ''>(
+    initialQuantity !== undefined && initialQuantity > 0 ? initialQuantity : ''
+  );
+  const [reason, setReason] = useState(
+    initialType === 'IN' || initialQuantity ? 'Kulakan Restock (Saran AI Kasirio)' : ''
+  );
 
   if (!product) return null;
 

@@ -1,24 +1,29 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import cors from 'cors';
 import { GoogleGenAI } from '@google/genai';
+import { authRouter } from './src/server/routes/authRoutes';
+import { syncRouter } from './src/server/routes/syncRoutes';
+import { backofficeRouter } from './src/server/routes/backofficeRoutes';
+import { paymentRouter } from './src/server/routes/paymentRoutes';
+import { notificationRouter } from './src/server/routes/notificationRoutes';
+import { aiReorderRouter } from './src/server/routes/aiReorderRoutes';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+app.use(cors());
 app.use(express.json({ limit: '15mb' }));
 
-// CORS headers for development
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+// Daftarkan rute API Fase 2, Fase 3 & Fase 4
+app.use('/api/auth', authRouter);
+app.use('/api/sync', syncRouter);
+app.use('/api/backoffice', backofficeRouter);
+app.use('/api/payment', paymentRouter);
+app.use('/api/notifications', notificationRouter);
+app.use('/api/ai', aiReorderRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

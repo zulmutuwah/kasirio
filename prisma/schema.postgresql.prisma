@@ -1,0 +1,293 @@
+// Skema Prisma untuk Produksi PostgreSQL Kasirio
+// Salin isi ini ke prisma/schema.prisma saat menghubungkan ke PostgreSQL (Supabase / Neon / Railway)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id           String      @id @default(uuid())
+  name         String
+  slug         String      @unique
+  businessType String      @default("RETAIL") // RETAIL | FNB
+  phone        String?
+  address      String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  outlets      Outlet[]
+  users        User[]
+  products     Product[]
+  categories   Category[]
+  transactions Transaction[]
+  stockLogs    StockLog[]
+  customers    Customer[]
+  cashSessions CashSession[]
+  auditLogs    AuditLog[]
+  syncLogs     SyncMutationLog[]
+
+  @@map("tenants")
+}
+
+model Outlet {
+  id           String      @id @default(uuid())
+  tenantId     String
+  name         String
+  address      String?
+  phone        String?
+  isMainBranch Boolean     @default(false)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users        User[]
+  products     Product[]
+  transactions Transaction[]
+  stockLogs    StockLog[]
+  cashSessions CashSession[]
+  auditLogs    AuditLog[]
+  syncLogs     SyncMutationLog[]
+
+  @@index([tenantId])
+  @@map("outlets")
+}
+
+model User {
+  id           String      @id @default(uuid())
+  tenantId     String
+  outletId     String?
+  name         String
+  email        String?
+  phone        String?
+  passwordHash String?
+  pinHash      String      // Hashed PIN untuk otorisasi POS
+  role         String      @default("CASHIER") // OWNER | MANAGER | CASHIER
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  outlet       Outlet?     @relation(fields: [outletId], references: [id])
+  cashSessions CashSession[]
+
+  @@index([tenantId])
+  @@index([outletId])
+  @@map("users")
+}
+
+model Category {
+  id        String    @id @default(uuid())
+  tenantId  String
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  products  Product[]
+
+  @@index([tenantId])
+  @@map("categories")
+}
+
+model Product {
+  id            String            @id @default(uuid())
+  tenantId      String
+  outletId      String?
+  sku           String?
+  barcode       String?
+  name          String
+  buyPrice      Float             @default(0)
+  sellPrice     Float
+  stock         Float             @default(0)
+  minStockAlert Float             @default(5)
+  unit          String            @default("Pcs")
+  categoryId    String?
+  deletedAt     DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  tenant        Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  outlet        Outlet?           @relation(fields: [outletId], references: [id])
+  category      Category?         @relation(fields: [categoryId], references: [id])
+  items         TransactionItem[]
+  stockLogs     StockLog[]
+
+  @@index([tenantId])
+  @@index([barcode])
+  @@index([sku])
+  @@map("products")
+}
+
+model Transaction {
+  id              String            @id @default(uuid())
+  tenantId        String
+  outletId        String
+  invoiceNumber   String
+  date            DateTime          @default(now())
+  subtotal        Float
+  discount        Float             @default(0)
+  tax             Float             @default(0)
+  total           Float
+  cashierGiven    Float?
+  changeDue       Float?
+  paymentMethod   String            // CASH | QRIS | TRANSFER | DEBT
+  status          String            @default("COMPLETED") // COMPLETED | VOID | REFUND
+  cashierId       String?
+  cashierName     String
+  customerId      String?
+  customerName    String?
+  notes           String?
+  isAuditFlagged  Boolean           @default(false)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  outlet          Outlet            @relation(fields: [outletId], references: [id])
+  items           TransactionItem[]
+
+  @@index([tenantId])
+  @@index([outletId])
+  @@index([date])
+  @@map("transactions")
+}
+
+model TransactionItem {
+  id            String      @id @default(uuid())
+  transactionId String
+  productId     String
+  productName   String
+  quantity      Float
+  buyPrice      Float       @default(0)
+  sellPrice     Float
+  discount      Float       @default(0)
+  subtotal      Float
+
+  transaction   Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  product       Product     @relation(fields: [productId], references: [id])
+
+  @@index([transactionId])
+  @@map("transaction_items")
+}
+
+model StockLog {
+  id            String      @id @default(uuid())
+  tenantId      String
+  outletId      String
+  productId     String
+  productName   String
+  type          String      // IN | OUT | ADJUSTMENT | VOID | TRANSFER
+  quantity      Float
+  previousStock Float
+  currentStock  Float
+  notes         String?
+  date          DateTime    @default(now())
+
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  outlet        Outlet      @relation(fields: [outletId], references: [id])
+  product       Product     @relation(fields: [productId], references: [id])
+
+  @@index([tenantId])
+  @@index([outletId])
+  @@index([productId])
+  @@index([date])
+  @@map("stock_logs")
+}
+
+model Customer {
+  id           String           @id @default(uuid())
+  tenantId     String
+  name         String
+  phone        String?
+  address      String?
+  totalDebt    Float            @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  tenant       Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  debtLogs     DebtPaymentLog[]
+
+  @@index([tenantId])
+  @@map("customers")
+}
+
+model DebtPaymentLog {
+  id            String    @id @default(uuid())
+  tenantId      String
+  customerId    String
+  amount        Float
+  paymentMethod String    @default("CASH")
+  notes         String?
+  date          DateTime  @default(now())
+
+  customer      Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([customerId])
+  @@map("debt_payment_logs")
+}
+
+model CashSession {
+  id             String    @id @default(uuid())
+  tenantId       String
+  outletId       String
+  cashierId      String
+  cashierName    String
+  openedAt       DateTime  @default(now())
+  closedAt       DateTime?
+  openingBalance Float
+  expectedCash   Float?
+  actualCash     Float?
+  difference     Float?
+  status         String    @default("OPEN") // OPEN | CLOSED
+  notes          String?
+
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  outlet         Outlet    @relation(fields: [outletId], references: [id])
+  cashier        User      @relation(fields: [cashierId], references: [id])
+
+  @@index([tenantId])
+  @@index([outletId])
+  @@map("cash_sessions")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  tenantId    String
+  outletId    String?
+  timestamp   DateTime @default(now())
+  type        String   // VOID_TRANSACTION | LARGE_DISCOUNT | DRAWER_OPEN | MANUAL_SYNC | LOGIN
+  details     String
+  cashierName String
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  outlet      Outlet?  @relation(fields: [outletId], references: [id])
+
+  @@index([tenantId])
+  @@index([timestamp])
+  @@map("audit_logs")
+}
+
+model SyncMutationLog {
+  id              String   @id @default(uuid())
+  tenantId        String
+  outletId        String
+  deviceId        String
+  entityType      String   // TRANSACTION | PRODUCT | STOCK_LOG | CUSTOMER | DEBT_PAYMENT | AUDIT_LOG
+  entityId        String
+  action          String   // CREATE | UPDATE | DELETE
+  payload         String   // JSON string
+  clientTimestamp DateTime
+  serverTimestamp DateTime @default(now())
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  outlet          Outlet   @relation(fields: [outletId], references: [id])
+
+  @@index([tenantId])
+  @@index([outletId])
+  @@index([serverTimestamp])
+  @@map("sync_mutation_logs")
+}

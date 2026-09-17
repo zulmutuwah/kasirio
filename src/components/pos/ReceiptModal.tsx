@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { usePOS } from '../../context/POSContext';
 import { Transaction } from '../../types';
 import { formatDateIndo, formatRupiah } from '../../utils/formatters';
-import { Printer, Share2, X, CheckCircle2, QrCode, FileText, Smartphone, Copy, Check } from 'lucide-react';
+import { Printer, Share2, X, CheckCircle2, QrCode, FileText, Smartphone, Copy, Check, Send, MessageCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { printReceipt } from '../../utils/hardwareBridge';
 
 interface ReceiptModalProps {
   transaction: Transaction | null;
@@ -20,11 +21,14 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
     (settings.paperSize as '58mm' | '80mm') || '58mm'
   );
   const [copiedPayload, setCopiedPayload] = useState(false);
+  const [phoneInput, setPhoneInput] = useState(transaction?.customer?.phone || '');
+  const [isSendingWaApi, setIsSendingWaApi] = useState(false);
+  const [waSentSuccess, setWaSentSuccess] = useState(false);
 
   if (!transaction) return null;
 
-  const handlePrint = () => {
-    window.print();
+  const handlePrint = async () => {
+    await printReceipt(undefined, { paperSize: selectedPaperSize });
   };
 
   // Compact Offline Receipt Payload for QR Code (No Cloud Server required)
@@ -62,6 +66,47 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
       ? transaction.customer.phone.replace(/[^0-9]/g, '')
       : '';
     window.open(`https://wa.me/${phone}?text=${encodedText}`, '_blank');
+  };
+
+  const handleSendWhatsAppApi = async () => {
+    const targetPhone = phoneInput || transaction.customer?.phone;
+    if (!targetPhone) {
+      showToast('Harap masukkan nomor WhatsApp pelanggan.', 'error');
+      return;
+    }
+
+    setIsSendingWaApi(true);
+    const baseUrl = settings.apiBaseUrl || 'http://localhost:3001';
+    try {
+      const res = await fetch(`${baseUrl}/api/notifications/whatsapp/receipt`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: targetPhone,
+          invoiceNumber: transaction.id,
+          storeName: settings.storeName,
+          total: transaction.total,
+          paymentMethod: transaction.paymentMethod,
+          cashierName: transaction.cashierName,
+          date: formatDateIndo(transaction.date),
+          items: transaction.items.map((i) => ({
+            name: i.productName,
+            quantity: i.quantity,
+            subtotal: i.subtotal,
+          })),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal mengirim struk via WhatsApp');
+
+      setWaSentSuccess(true);
+      showToast(`Struk berhasil dikirim ke WhatsApp ${data.deliveredTo}!`, 'success');
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    } finally {
+      setIsSendingWaApi(false);
+    }
   };
 
   return (
@@ -339,6 +384,37 @@ export const ReceiptModal: React.FC<ReceiptModalProps> = ({
               </div>
             )}
 
+          </div>
+
+          {/* WhatsApp Direct API Dispatch Bar */}
+          <div className="px-4 py-3 bg-slate-850 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs text-slate-300 w-full sm:w-auto">
+              <MessageCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="font-semibold text-slate-200">Kirim Struk WA Otomatis:</span>
+            </div>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <input
+                type="tel"
+                value={phoneInput}
+                onChange={(e) => setPhoneInput(e.target.value)}
+                placeholder="08123456789"
+                className="px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-xs text-slate-100 font-mono focus:outline-none focus:border-emerald-500 w-full sm:w-44"
+              />
+              <button
+                onClick={handleSendWhatsAppApi}
+                disabled={isSendingWaApi}
+                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-1.5 transition-all shrink-0 shadow-xs"
+              >
+                {isSendingWaApi ? (
+                  <span className="inline-block animate-spin">⏳</span>
+                ) : waSentSuccess ? (
+                  <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                ) : (
+                  <Send className="w-3.5 h-3.5" />
+                )}
+                <span>{waSentSuccess ? 'Terkirim' : 'Kirim Struk WA'}</span>
+              </button>
+            </div>
           </div>
 
           {/* Modal Bottom Actions */}

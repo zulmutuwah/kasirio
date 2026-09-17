@@ -1,0 +1,3102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kasirio Architecture Bible v1.0 — Master Blueprint Sistem</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #059669;
+      --primary-dark: #047857;
+      --primary-light: #d1fae5;
+      --primary-focus: rgba(5, 150, 105, 0.2);
+      --bg-body: #f8fafc;
+      --bg-surface: #ffffff;
+      --bg-sidebar: #0f172a;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --text-sidebar: #94a3b8;
+      --text-sidebar-active: #ffffff;
+      --border-color: #e2e8f0;
+      --border-sidebar: #1e293b;
+      --code-bg: #f1f5f9;
+      --pre-bg: #0f172a;
+      --pre-text: #f8fafc;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    [data-theme="dark"] {
+      --primary: #10b981;
+      --primary-dark: #059669;
+      --primary-light: #064e3b;
+      --primary-focus: rgba(16, 185, 129, 0.25);
+      --bg-body: #090d16;
+      --bg-surface: #0f172a;
+      --bg-sidebar: #050811;
+      --text-main: #e2e8f0;
+      --text-muted: #94a3b8;
+      --text-sidebar: #64748b;
+      --text-sidebar-active: #38bdf8;
+      --border-color: #1e293b;
+      --border-sidebar: #111827;
+      --code-bg: #1e293b;
+      --pre-bg: #030712;
+      --pre-text: #e2e8f0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      line-height: 1.7;
+      display: flex;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Reading Progress Bar */
+    #progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: transparent;
+      z-index: 1000;
+    }
+    #progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #059669);
+      width: 0%;
+      transition: width 0.1s ease;
+    }
+
+    /* Sidebar Layout */
+    .sidebar {
+      width: 320px;
+      background-color: var(--bg-sidebar);
+      color: var(--text-sidebar);
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border-sidebar);
+      z-index: 50;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-header {
+      padding: 24px 20px 16px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 10px;
+    }
+
+    .sidebar-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #f8fafc;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .sidebar-subtitle {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 4px;
+    }
+
+    .search-box {
+      padding: 12px 20px;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background-color: #1e293b;
+      color: #f8fafc;
+      font-size: 0.875rem;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-focus);
+    }
+    .search-input::placeholder {
+      color: #64748b;
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 12px;
+    }
+
+    .sidebar-nav::-webkit-scrollbar {
+      width: 6px;
+    }
+    .sidebar-nav::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+
+    .toc-list {
+      list-style: none;
+    }
+
+    .toc-item {
+      margin-bottom: 2px;
+    }
+
+    .toc-item a {
+      display: block;
+      color: #94a3b8;
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      transition: all 0.15s ease;
+      line-height: 1.4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toc-item a:hover {
+      color: #ffffff;
+      background-color: rgba(255, 255, 255, 0.06);
+    }
+
+    .toc-level-1 a {
+      font-weight: 700;
+      color: #cbd5e1;
+      margin-top: 14px;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .toc-level-2 a {
+      padding-left: 16px;
+      font-weight: 500;
+    }
+
+    .toc-level-3 a {
+      padding-left: 28px;
+      font-size: 0.8rem;
+      color: #64748b;
+    }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid #1e293b;
+      font-size: 0.75rem;
+      color: #64748b;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Main Content */
+    .main-wrapper {
+      margin-left: 320px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* Top Action Bar */
+    .top-bar {
+      position: sticky;
+      top: 0;
+      background: var(--bg-surface);
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 36px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 40;
+      backdrop-filter: blur(8px);
+    }
+
+    .breadcrumbs {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .breadcrumbs span {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      background: var(--bg-surface);
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+    .btn:hover {
+      background: var(--bg-body);
+      border-color: var(--primary);
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary-dark);
+    }
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    /* Document Container */
+    .content-container {
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 48px 36px 96px;
+    }
+
+    /* Typography */
+    h1, h2, h3, h4, h5, h6 {
+      color: var(--text-main);
+      font-weight: 700;
+      line-height: 1.3;
+      margin-top: 2em;
+      margin-bottom: 0.75em;
+      scroll-margin-top: 80px;
+      position: relative;
+    }
+
+    h1 {
+      font-size: 2.25rem;
+      letter-spacing: -0.03em;
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 16px;
+      margin-top: 1em;
+    }
+
+    h2 {
+      font-size: 1.6rem;
+      letter-spacing: -0.02em;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+      margin-top: 2.5em;
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      margin-top: 1.8em;
+    }
+
+    h4 {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+    }
+
+    .header-anchor {
+      margin-left: 8px;
+      color: var(--text-muted);
+      opacity: 0;
+      text-decoration: none;
+      font-weight: 400;
+      transition: opacity 0.2s;
+    }
+    h1:hover .header-anchor,
+    h2:hover .header-anchor,
+    h3:hover .header-anchor {
+      opacity: 1;
+    }
+
+    p {
+      margin-bottom: 1.25em;
+      color: var(--text-main);
+      font-size: 1.025rem;
+    }
+
+    strong {
+      font-weight: 600;
+      color: var(--text-main);
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+
+    ul, ol {
+      margin-bottom: 1.4em;
+      padding-left: 28px;
+    }
+
+    li {
+      margin-bottom: 0.4em;
+      font-size: 1rem;
+    }
+
+    blockquote {
+      border-left: 4px solid var(--primary);
+      padding: 12px 20px;
+      margin: 1.6em 0;
+      background: var(--bg-surface);
+      border-radius: 0 8px 8px 0;
+      box-shadow: var(--shadow-sm);
+      color: var(--text-main);
+      font-style: italic;
+    }
+
+    hr {
+      border: 0;
+      height: 1px;
+      background: var(--border-color);
+      margin: 3em 0;
+    }
+
+    /* Tables */
+    .table-wrapper {
+      overflow-x: auto;
+      margin: 1.8em 0;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.925rem;
+      text-align: left;
+    }
+
+    thead th {
+      background: var(--bg-body);
+      color: var(--text-main);
+      font-weight: 700;
+      padding: 12px 16px;
+      border-bottom: 2px solid var(--border-color);
+      white-space: nowrap;
+    }
+
+    tbody td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+      vertical-align: top;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    tbody tr:hover {
+      background-color: rgba(5, 150, 105, 0.03);
+    }
+
+    /* Code Blocks */
+    pre {
+      background: var(--pre-bg);
+      color: var(--pre-text);
+      padding: 18px 20px;
+      border-radius: 10px;
+      overflow-x: auto;
+      margin: 1.6em 0;
+      font-family: var(--font-mono);
+      font-size: 0.875rem;
+      line-height: 1.6;
+      border: 1px solid var(--border-color);
+      box-shadow: var(--shadow-md);
+    }
+
+    code {
+      font-family: var(--font-mono);
+      font-size: 0.88em;
+      background-color: var(--code-bg);
+      color: var(--primary-dark);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    pre code {
+      background-color: transparent;
+      color: inherit;
+      padding: 0;
+      font-size: inherit;
+      font-weight: normal;
+    }
+
+    /* Diagram Block */
+    pre.mermaid, pre:has(code.language-mermaid) {
+      background: var(--bg-surface);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    /* Floating Back to Top */
+    .back-to-top {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-md);
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s ease;
+      z-index: 100;
+      border: none;
+    }
+    .back-to-top.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .back-to-top:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 900px) {
+      .sidebar {
+        transform: translateX(-100%);
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .main-wrapper {
+        margin-left: 0;
+      }
+      .content-container {
+        padding: 24px 16px 64px;
+      }
+      .top-bar {
+        padding: 12px 16px;
+      }
+      .menu-toggle {
+        display: inline-flex !important;
+      }
+    }
+
+    .menu-toggle {
+      display: none;
+    }
+
+    /* Print Stylesheet for PDF Export */
+    @media print {
+      .sidebar, .top-bar, #progress-container, .back-to-top, .header-anchor {
+        display: none !important;
+      }
+      .main-wrapper {
+        margin-left: 0 !important;
+      }
+      .content-container {
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        font-size: 11pt;
+      }
+      h1, h2, h3 {
+        page-break-after: avoid;
+      }
+      table, pre, blockquote {
+        page-break-inside: avoid;
+      }
+      pre {
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+      a {
+        color: #000000 !important;
+        text-decoration: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Progress Bar -->
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+  </div>
+
+  <!-- Left Sidebar Navigation -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand-badge">Enterprise Master Spec</div>
+      <div class="sidebar-title">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 6h10"/><path d="M6 10h10"/></svg>
+        Kasirio Bible
+      </div>
+      <div class="sidebar-subtitle">v1.0.0 • Kitab Arsitektur Resmi</div>
+    </div>
+
+    <div class="search-box">
+      <input type="text" id="search-input" class="search-input" placeholder="🔍 Cari bab, tabel, ADR, RFC..." autocomplete="off">
+    </div>
+
+    <nav class="sidebar-nav" id="sidebar-nav">
+      <ul class="toc-list"><li class="toc-item toc-level-1"><a href="#-kasirio-architecture-bible-v10">📖 KASIRIO ARCHITECTURE BIBLE v1.0</a></li><li class="toc-item toc-level-2"><a href="#daftar-isi-utama">DAFTAR ISI UTAMA</a></li><li class="toc-item toc-level-1"><a href="#bagian-i-foundation">BAGIAN I — FOUNDATION</a></li><li class="toc-item toc-level-2"><a href="#bab-1-visi-misi-amp-filosofi-produk">Bab 1 — Visi, Misi &amp; Filosofi Produk</a></li><li class="toc-item toc-level-2"><a href="#bab-2-sepuluh-prinsip-arsitektur-kasirio">Bab 2 — Sepuluh Prinsip Arsitektur Kasirio</a></li><li class="toc-item toc-level-2"><a href="#bab-3-cakupan-produk-amp-batasan-sistem-product-scope">Bab 3 — Cakupan Produk &amp; Batasan Sistem (Product Scope)</a></li><li class="toc-item toc-level-2"><a href="#bab-4-terminologi-resmi-amp-ubiquitous-language">Bab 4 — Terminologi Resmi &amp; Ubiquitous Language</a></li><li class="toc-item toc-level-2"><a href="#bab-5-ikhtisar-arsitektur-sistem-high-level-architecture">Bab 5 — Ikhtisar Arsitektur Sistem (High-Level Architecture)</a></li><li class="toc-item toc-level-1"><a href="#bagian-ii-product-architecture">BAGIAN II — PRODUCT ARCHITECTURE</a></li><li class="toc-item toc-level-2"><a href="#bab-6-technology-stack-bible">Bab 6 — Technology Stack Bible</a></li><li class="toc-item toc-level-2"><a href="#bab-7-struktur-direktori-amp-organisasi-kode">Bab 7 — Struktur Direktori &amp; Organisasi Kode</a></li><li class="toc-item toc-level-2"><a href="#bab-8-arsitektur-modul-amp-batasan-konteks-bounded-context">Bab 8 — Arsitektur Modul &amp; Batasan Konteks (Bounded Context)</a></li><li class="toc-item toc-level-2"><a href="#bab-9-arsitektur-routing-amp-navigasi">Bab 9 — Arsitektur Routing &amp; Navigasi</a></li><li class="toc-item toc-level-2"><a href="#bab-10-arsitektur-state-management">Bab 10 — Arsitektur State Management</a></li><li class="toc-item toc-level-1"><a href="#bagian-iii-database-architecture">BAGIAN III — DATABASE ARCHITECTURE</a></li><li class="toc-item toc-level-2"><a href="#bab-11-filosofi-basis-data-offline-first">Bab 11 — Filosofi Basis Data Offline-First</a></li><li class="toc-item toc-level-2"><a href="#bab-12-dexie-schema-bible-spesifikasi-21-tabel">Bab 12 — Dexie Schema Bible (Spesifikasi 21 Tabel)</a></li><li class="toc-item toc-level-3"><a href="#tabel-1-stores">Tabel 1: stores</a></li><li class="toc-item toc-level-3"><a href="#tabel-2-users">Tabel 2: users</a></li><li class="toc-item toc-level-3"><a href="#tabel-3-roles">Tabel 3: roles</a></li><li class="toc-item toc-level-3"><a href="#tabel-4-products">Tabel 4: products</a></li><li class="toc-item toc-level-3"><a href="#tabel-5-productvariants">Tabel 5: productVariants</a></li><li class="toc-item toc-level-3"><a href="#tabel-6-categories">Tabel 6: categories</a></li><li class="toc-item toc-level-3"><a href="#tabel-7-transactions">Tabel 7: transactions</a></li><li class="toc-item toc-level-3"><a href="#tabel-8-transactionitems">Tabel 8: transactionItems</a></li><li class="toc-item toc-level-3"><a href="#tabel-9-payments">Tabel 9: payments</a></li><li class="toc-item toc-level-3"><a href="#tabel-10-stocklogs">Tabel 10: stockLogs</a></li><li class="toc-item toc-level-3"><a href="#tabel-11-suppliers">Tabel 11: suppliers</a></li><li class="toc-item toc-level-3"><a href="#tabel-12-purchases">Tabel 12: purchases</a></li><li class="toc-item toc-level-3"><a href="#tabel-13-purchaseitems">Tabel 13: purchaseItems</a></li><li class="toc-item toc-level-3"><a href="#tabel-14-customers">Tabel 14: customers</a></li><li class="toc-item toc-level-3"><a href="#tabel-15-customerdebts">Tabel 15: customerDebts</a></li><li class="toc-item toc-level-3"><a href="#tabel-16-debtpayments">Tabel 16: debtPayments</a></li><li class="toc-item toc-level-3"><a href="#tabel-17-suspendedcarts">Tabel 17: suspendedCarts</a></li><li class="toc-item toc-level-3"><a href="#tabel-18-cashsessions">Tabel 18: cashSessions</a></li><li class="toc-item toc-level-3"><a href="#tabel-19-auditlogs">Tabel 19: auditLogs</a></li><li class="toc-item toc-level-3"><a href="#tabel-20-appsettings">Tabel 20: appSettings</a></li><li class="toc-item toc-level-3"><a href="#tabel-21-billingplans-amp-koinledger">Tabel 21: billingPlans &amp; koinLedger</a></li><li class="toc-item toc-level-2"><a href="#bab-13-entity-relationship-bible-erd">Bab 13 — Entity Relationship Bible (ERD)</a></li><li class="toc-item toc-level-2"><a href="#bab-14-kebijakan-migrasi-skema-basis-data">Bab 14 — Kebijakan Migrasi Skema Basis Data</a></li><li class="toc-item toc-level-2"><a href="#bab-15-siklus-hidup-amp-retensi-data">Bab 15 — Siklus Hidup &amp; Retensi Data</a></li><li class="toc-item toc-level-1"><a href="#bagian-iv-pos-engine">BAGIAN IV — POS ENGINE</a></li><li class="toc-item toc-level-2"><a href="#bab-16-transaction-lifecycle-engine">Bab 16 — Transaction Lifecycle Engine</a></li><li class="toc-item toc-level-2"><a href="#bab-17-cart-engine-amp-antrean-transaksi">Bab 17 — Cart Engine &amp; Antrean Transaksi</a></li><li class="toc-item toc-level-2"><a href="#bab-18-payment-engine">Bab 18 — Payment Engine</a></li><li class="toc-item toc-level-2"><a href="#bab-19-receipt-engine-dual-mode-thermal-amp-dynamic-qr">Bab 19 — Receipt Engine (Dual-Mode Thermal &amp; Dynamic QR)</a></li><li class="toc-item toc-level-2"><a href="#bab-20-barcode-engine-amp-low-latency-hardware-buffer">Bab 20 — Barcode Engine &amp; Low-Latency Hardware Buffer</a></li><li class="toc-item toc-level-1"><a href="#bagian-v-inventory-engine">BAGIAN V — INVENTORY ENGINE</a></li><li class="toc-item toc-level-2"><a href="#bab-21-arsitektur-produk-amp-master-data">Bab 21 — Arsitektur Produk &amp; Master Data</a></li><li class="toc-item toc-level-2"><a href="#bab-22-immutable-inventory-movement-ledger">Bab 22 — Immutable Inventory Movement Ledger</a></li><li class="toc-item toc-level-2"><a href="#bab-23-purchase-engine-amp-supplier-management">Bab 23 — Purchase Engine &amp; Supplier Management</a></li><li class="toc-item toc-level-2"><a href="#bab-24-stock-opname-amp-reconciliation-engine">Bab 24 — Stock Opname &amp; Reconciliation Engine</a></li><li class="toc-item toc-level-2"><a href="#bab-25-multi-unit-amp-uom-conversion-engine">Bab 25 — Multi-Unit &amp; UoM Conversion Engine</a></li><li class="toc-item toc-level-1"><a href="#bagian-vi-customer-amp-finance">BAGIAN VI — CUSTOMER &amp; FINANCE</a></li><li class="toc-item toc-level-2"><a href="#bab-26-customer-engine-amp-rekam-belanja">Bab 26 — Customer Engine &amp; Rekam Belanja</a></li><li class="toc-item toc-level-2"><a href="#bab-27-kasbon-engine-piutang-usaha-tradisional">Bab 27 — Kasbon Engine (Piutang Usaha Tradisional)</a></li><li class="toc-item toc-level-2"><a href="#bab-28-cash-session-engine-shift-kasir-amp-rekonsiliasi-kas">Bab 28 — Cash Session Engine (Shift Kasir &amp; Rekonsiliasi Kas)</a></li><li class="toc-item toc-level-2"><a href="#bab-29-reports-amp-financial-analytics-engine">Bab 29 — Reports &amp; Financial Analytics Engine</a></li><li class="toc-item toc-level-1"><a href="#bagian-vii-security-architecture">BAGIAN VII — SECURITY ARCHITECTURE</a></li><li class="toc-item toc-level-2"><a href="#bab-30-arsitektur-autentikasi-amp-pin-gate">Bab 30 — Arsitektur Autentikasi &amp; PIN Gate</a></li><li class="toc-item toc-level-2"><a href="#bab-31-arsitektur-otorisasi-role-amp-permission-matrix">Bab 31 — Arsitektur Otorisasi (Role &amp; Permission Matrix)</a></li><li class="toc-item toc-level-2"><a href="#bab-32-audit-logging-amp-forensic-trail">Bab 32 — Audit Logging &amp; Forensic Trail</a></li><li class="toc-item toc-level-2"><a href="#bab-33-backup-amp-disaster-recovery-engine">Bab 33 — Backup &amp; Disaster Recovery Engine</a></li><li class="toc-item toc-level-1"><a href="#bagian-viii-platform-services">BAGIAN VIII — PLATFORM SERVICES</a></li><li class="toc-item toc-level-2"><a href="#bab-34-pwa-engine-amp-service-worker-lifecycle">Bab 34 — PWA Engine &amp; Service Worker Lifecycle</a></li><li class="toc-item toc-level-2"><a href="#bab-35-storage-persistence-amp-eviction-shield">Bab 35 — Storage Persistence &amp; Eviction Shield</a></li><li class="toc-item toc-level-2"><a href="#bab-36-printer-hardware-abstraction-layer">Bab 36 — Printer Hardware Abstraction Layer</a></li><li class="toc-item toc-level-2"><a href="#bab-37-settings-amp-business-parameter-engine">Bab 37 — Settings &amp; Business Parameter Engine</a></li><li class="toc-item toc-level-1"><a href="#bagian-ix-ai-architecture">BAGIAN IX — AI ARCHITECTURE</a></li><li class="toc-item toc-level-2"><a href="#bab-38-ai-co-pilot-amp-multimodal-assistant">Bab 38 — AI Co-Pilot &amp; Multimodal Assistant</a></li><li class="toc-item toc-level-1"><a href="#bagian-x-future-architecture">BAGIAN X — FUTURE ARCHITECTURE</a></li><li class="toc-item toc-level-2"><a href="#bab-39-cloud-ready-architecture-amp-sync-engine">Bab 39 — Cloud-Ready Architecture &amp; Sync Engine</a></li><li class="toc-item toc-level-2"><a href="#bab-40-roadmap-evolusi-arsitektur-5-tahun">Bab 40 — Roadmap Evolusi Arsitektur 5 Tahun</a></li><li class="toc-item toc-level-1"><a href="#standar-kinerja-non-functional-requirements">STANDAR KINERJA (NON-FUNCTIONAL REQUIREMENTS)</a></li><li class="toc-item toc-level-1"><a href="#standar-koding-amp-pola-implementasi">STANDAR KODING &amp; POLA IMPLEMENTASI</a></li><li class="toc-item toc-level-1"><a href="#architecture-decision-records-adr">ARCHITECTURE DECISION RECORDS (ADR)</a></li><li class="toc-item toc-level-3"><a href="#adr-001-adopsi-arsitektur-offline-first">ADR-001: Adopsi Arsitektur Offline-First</a></li><li class="toc-item toc-level-3"><a href="#adr-002-pemilihan-dexiejs-di-atas-indexeddb-murni">ADR-002: Pemilihan Dexie.js di Atas IndexedDB Murni</a></li><li class="toc-item toc-level-3"><a href="#adr-003-pemisahan-tabel-transaksi-menjadi-header-dan-items">ADR-003: Pemisahan Tabel Transaksi Menjadi Header dan Items</a></li><li class="toc-item toc-level-3"><a href="#adr-004-penerapan-immutable-inventory-movement-ledger">ADR-004: Penerapan Immutable Inventory Movement Ledger</a></li><li class="toc-item toc-level-3"><a href="#adr-005-sistem-struk-dual-mode-dynamic-qr-offline">ADR-005: Sistem Struk Dual-Mode (Dynamic QR Offline)</a></li><li class="toc-item toc-level-3"><a href="#adr-006-monetisasi-melalui-koin-kasirio-closed-loop-token">ADR-006: Monetisasi Melalui Koin Kasirio (Closed-Loop Token)</a></li><li class="toc-item toc-level-3"><a href="#adr-007-pin-gate-otorisasi-aksi-sensitif">ADR-007: PIN Gate Otorisasi Aksi Sensitif</a></li><li class="toc-item toc-level-3"><a href="#adr-008-hardware-barcode-buffer-dengan-threshold-waktu-lt50ms">ADR-008: Hardware Barcode Buffer dengan Threshold Waktu &lt;50ms</a></li><li class="toc-item toc-level-3"><a href="#adr-009-service-worker-update-strategy-registertype-39prompt39">ADR-009: Service Worker Update Strategy registerType: &#39;prompt&#39;</a></li><li class="toc-item toc-level-3"><a href="#adr-010-pelindung-eviction-penyimpanan-via-navigatorstoragepersist">ADR-010: Pelindung Eviction Penyimpanan via navigator.storage.persist()</a></li><li class="toc-item toc-level-3"><a href="#adr-011-penggunaan-uuid-v4-untuk-kunci-primer">ADR-011: Penggunaan UUID v4 untuk Kunci Primer</a></li><li class="toc-item toc-level-3"><a href="#adr-012-pendekatan-human-in-the-loop-pada-ai-ocr-nota-pasar">ADR-012: Pendekatan Human-in-the-Loop pada AI OCR Nota Pasar</a></li><li class="toc-item toc-level-3"><a href="#adr-013-proteksi-kredensial-ai-menggunakan-companion-express-proxy">ADR-013: Proteksi Kredensial AI Menggunakan Companion Express Proxy</a></li><li class="toc-item toc-level-3"><a href="#adr-014-virtual-soundbox-menggunakan-web-speech-api-bawaan-peramban">ADR-014: Virtual Soundbox Menggunakan Web Speech API Bawaan Peramban</a></li><li class="toc-item toc-level-3"><a href="#adr-015-penyelenggaraan-fitur-buku-kasbon-terintegrasi">ADR-015: Penyelenggaraan Fitur Buku Kasbon Terintegrasi</a></li><li class="toc-item toc-level-3"><a href="#adr-016-blind-cash-count-pada-sesi-tutup-shift-kasir">ADR-016: Blind Cash Count pada Sesi Tutup Shift Kasir</a></li><li class="toc-item toc-level-3"><a href="#adr-017-dukungan-standar-cetak-kertas-lebar-58mm-dan-80mm">ADR-017: Dukungan Standar Cetak Kertas Lebar 58mm dan 80mm</a></li><li class="toc-item toc-level-3"><a href="#adr-018-skema-pencadangan-berkas-json-tunggal">ADR-018: Skema Pencadangan Berkas JSON Tunggal</a></li><li class="toc-item toc-level-3"><a href="#adr-019-evaluasi-css-menggunakan-tailwind-v4-modern">ADR-019: Evaluasi CSS Menggunakan Tailwind v4 Modern</a></li><li class="toc-item toc-level-3"><a href="#adr-020-standarisasi-jam-dan-tanggal-berbasis-standar-iso-8601">ADR-020: Standarisasi Jam dan Tanggal Berbasis Standar ISO-8601</a></li><li class="toc-item toc-level-1"><a href="#rfc-index">RFC INDEX</a></li><li class="toc-item toc-level-1"><a href="#glosarium-istilah-teknis-amp-bisnis">GLOSARIUM ISTILAH TEKNIS &amp; BISNIS</a></li><li class="toc-item toc-level-1"><a href="#appendix">APPENDIX</a></li><li class="toc-item toc-level-3"><a href="#appendix-a-design-tokens-amp-palette-standar">Appendix A: Design Tokens &amp; Palette Standar</a></li><li class="toc-item toc-level-3"><a href="#appendix-b-environment-variables">Appendix B: Environment Variables</a></li><li class="toc-item toc-level-3"><a href="#appendix-c-feature-flags">Appendix C: Feature Flags</a></li><li class="toc-item toc-level-3"><a href="#appendix-d-error-codes-standar">Appendix D: Error Codes Standar</a></li><li class="toc-item toc-level-3"><a href="#appendix-e-transaction-status-enums">Appendix E: Transaction Status Enums</a></li><li class="toc-item toc-level-3"><a href="#appendix-f-stock-movement-type-enums">Appendix F: Stock Movement Type Enums</a></li><li class="toc-item toc-level-3"><a href="#appendix-g-payment-status-enums">Appendix G: Payment Status Enums</a></li><li class="toc-item toc-level-3"><a href="#appendix-h-business-type-enums">Appendix H: Business Type Enums</a></li><li class="toc-item toc-level-3"><a href="#appendix-i-quick-folder-cheat-sheet">Appendix I: Quick Folder Cheat Sheet</a></li><li class="toc-item toc-level-3"><a href="#appendix-j-riwayat-versi-dokumen">Appendix J: Riwayat Versi Dokumen</a></li></ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span>Kasirio POS Core Architecture</span>
+      <span>40 Bab Penuh</span>
+    </div>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <div class="main-wrapper">
+    
+    <!-- Top Action Bar -->
+    <header class="top-bar">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <button class="btn menu-toggle" id="menu-toggle" aria-label="Buka Menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+        </button>
+        <div class="breadcrumbs">
+          Arsitektur &bull; <span>Kasirio Architecture Bible v1.0</span>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn" id="theme-toggle" title="Ganti Tema Terang/Gelap">
+          <svg id="theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          <span id="theme-text">Mode Gelap</span>
+        </button>
+        <button class="btn btn-primary" onclick="window.print()" title="Cetak atau Ekspor sebagai PDF">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>
+          Ekspor PDF / Cetak
+        </button>
+      </div>
+    </header>
+
+    <!-- Document Content -->
+    <main class="content-container">
+      <h1 id="-kasirio-architecture-bible-v10">📖 KASIRIO ARCHITECTURE BIBLE v1.0<a class="header-anchor" href="#-kasirio-architecture-bible-v10" title="Tautan langsung ke seksi ini">#</a></h1>
+<h3 id="kitab-arsitektur-amp-master-blueprint-sistem-kasirio"><em>Kitab Arsitektur &amp; Master Blueprint Sistem Kasirio</em><a class="header-anchor" href="#kitab-arsitektur-amp-master-blueprint-sistem-kasirio" title="Tautan langsung ke seksi ini">#</a></h3>
+<p><strong>Platform Point of Sale (POS) &amp; Operasional Bisnis UMKM Indonesia Berbasis PWA Offline-First</strong></p>
+<hr>
+<blockquote>
+<p><strong>STATUS DOKUMEN:</strong> RESMI &amp; AKTIF (Single Source of Truth)<br><strong>VERSI DOKUMEN:</strong> 1.0.0 (Genesis Edition)<br><strong>AUTHOR:</strong> Chief Software Architect &amp; Core Engineering Team Kasirio<br><strong>TANGGAL RILIS:</strong> September 2026<br><strong>KLASIFIKASI:</strong> Internal Technical Blueprint &amp; Engineering Standard<br><strong>ACUAN BENCHMARK:</strong> Square POS Architecture, Shopify POS Offline Engine, Toast Architecture, Odoo Modular POS</p>
+</blockquote>
+<hr>
+<h2 id="daftar-isi-utama">DAFTAR ISI UTAMA<a class="header-anchor" href="#daftar-isi-utama" title="Tautan langsung ke seksi ini">#</a></h2>
+<ul>
+<li><a href="#bagian-i--foundation">BAGIAN I — FOUNDATION</a><ul>
+<li><a href="#bab-1--visi-misi--filosofi-produk">Bab 1 — Visi, Misi &amp; Filosofi Produk</a></li>
+<li><a href="#bab-2--sepuluh-prinsip-arsitektur-kasirio">Bab 2 — Sepuluh Prinsip Arsitektur Kasirio</a></li>
+<li><a href="#bab-3--cakupan-produk--batasan-sistem-product-scope">Bab 3 — Cakupan Produk &amp; Batasan Sistem (Product Scope)</a></li>
+<li><a href="#bab-4--terminologi-resmi--ubiquitous-language">Bab 4 — Terminologi Resmi &amp; Ubiquitous Language</a></li>
+<li><a href="#bab-5--ikhtisar-arsitektur-sistem-high-level-architecture">Bab 5 — Ikhtisar Arsitektur Sistem (High-Level Architecture)</a></li>
+</ul>
+</li>
+<li><a href="#bagian-ii--product-architecture">BAGIAN II — PRODUCT ARCHITECTURE</a><ul>
+<li><a href="#bab-6--technology-stack-bible">Bab 6 — Technology Stack Bible</a></li>
+<li><a href="#bab-7--struktur-direktori--organisasi-kode">Bab 7 — Struktur Direktori &amp; Organisasi Kode</a></li>
+<li><a href="#bab-8--arsitektur-modul--batasan-konteks-bounded-context">Bab 8 — Arsitektur Modul &amp; Batasan Konteks (Bounded Context)</a></li>
+<li><a href="#bab-9--arsitektur-routing--navigasi">Bab 9 — Arsitektur Routing &amp; Navigasi</a></li>
+<li><a href="#bab-10--arsitektur-state-management">Bab 10 — Arsitektur State Management</a></li>
+</ul>
+</li>
+<li><a href="#bagian-iii--database-architecture">BAGIAN III — DATABASE ARCHITECTURE</a><ul>
+<li><a href="#bab-11--filosofi-basis-data-offline-first">Bab 11 — Filosofi Basis Data Offline-First</a></li>
+<li><a href="#bab-12--dexie-schema-bible-spesifikasi-21-tabel">Bab 12 — Dexie Schema Bible (Spesifikasi 21 Tabel)</a></li>
+<li><a href="#bab-13--entity-relationship-bible-erd">Bab 13 — Entity Relationship Bible (ERD)</a></li>
+<li><a href="#bab-14--kebijakan-migrasi-skema-basis-data">Bab 14 — Kebijakan Migrasi Skema Basis Data</a></li>
+<li><a href="#bab-15--siklus-hidup--retensi-data">Bab 15 — Siklus Hidup &amp; Retensi Data</a></li>
+</ul>
+</li>
+<li><a href="#bagian-iv--pos-engine">BAGIAN IV — POS ENGINE</a><ul>
+<li><a href="#bab-16--transaction-lifecycle-engine">Bab 16 — Transaction Lifecycle Engine</a></li>
+<li><a href="#bab-17--cart-engine--antrean-transaksi">Bab 17 — Cart Engine &amp; Antrean Transaksi</a></li>
+<li><a href="#bab-18--payment-engine">Bab 18 — Payment Engine</a></li>
+<li><a href="#bab-19--receipt-engine-dual-mode-thermal--dynamic-qr">Bab 19 — Receipt Engine (Dual-Mode Thermal &amp; Dynamic QR)</a></li>
+<li><a href="#bab-20--barcode-engine--low-latency-hardware-buffer">Bab 20 — Barcode Engine &amp; Low-Latency Hardware Buffer</a></li>
+</ul>
+</li>
+<li><a href="#bagian-v--inventory-engine">BAGIAN V — INVENTORY ENGINE</a><ul>
+<li><a href="#bab-21--arsitektur-produk--master-data">Bab 21 — Arsitektur Produk &amp; Master Data</a></li>
+<li><a href="#bab-22--immutable-inventory-movement-ledger">Bab 22 — Immutable Inventory Movement Ledger</a></li>
+<li><a href="#bab-23--purchase-engine--supplier-management">Bab 23 — Purchase Engine &amp; Supplier Management</a></li>
+<li><a href="#bab-24--stock-opname--reconciliation-engine">Bab 24 — Stock Opname &amp; Reconciliation Engine</a></li>
+<li><a href="#bab-25--multi-unit--uom-conversion-engine">Bab 25 — Multi-Unit &amp; UoM Conversion Engine</a></li>
+</ul>
+</li>
+<li><a href="#bagian-vi--customer--finance">BAGIAN VI — CUSTOMER &amp; FINANCE</a><ul>
+<li><a href="#bab-26--customer-engine--rekam-belanja">Bab 26 — Customer Engine &amp; Rekam Belanja</a></li>
+<li><a href="#bab-27--kasbon-engine-piutang-usaha-tradisional">Bab 27 — Kasbon Engine (Piutang Usaha Tradisional)</a></li>
+<li><a href="#bab-28--cash-session-engine-shift-kasir--rekonsiliasi-kas">Bab 28 — Cash Session Engine (Shift Kasir &amp; Rekonsiliasi Kas)</a></li>
+<li><a href="#bab-29--reports--financial-analytics-engine">Bab 29 — Reports &amp; Financial Analytics Engine</a></li>
+</ul>
+</li>
+<li><a href="#bagian-vii--security-architecture">BAGIAN VII — SECURITY ARCHITECTURE</a><ul>
+<li><a href="#bab-30--arsitektur-autentikasi--pin-gate">Bab 30 — Arsitektur Autentikasi &amp; PIN Gate</a></li>
+<li><a href="#bab-31--arsitektur-otorisasi-role--permission-matrix">Bab 31 — Arsitektur Otorisasi (Role &amp; Permission Matrix)</a></li>
+<li><a href="#bab-32--audit-logging--forensic-trail">Bab 32 — Audit Logging &amp; Forensic Trail</a></li>
+<li><a href="#bab-33--backup--disaster-recovery-engine">Bab 33 — Backup &amp; Disaster Recovery Engine</a></li>
+</ul>
+</li>
+<li><a href="#bagian-viii--platform-services">BAGIAN VIII — PLATFORM SERVICES</a><ul>
+<li><a href="#bab-34--pwa-engine--service-worker-lifecycle">Bab 34 — PWA Engine &amp; Service Worker Lifecycle</a></li>
+<li><a href="#bab-35--storage-persistence--eviction-shield">Bab 35 — Storage Persistence &amp; Eviction Shield</a></li>
+<li><a href="#bab-36--printer-hardware-abstraction-layer">Bab 36 — Printer Hardware Abstraction Layer</a></li>
+<li><a href="#bab-37--settings--business-parameter-engine">Bab 37 — Settings &amp; Business Parameter Engine</a></li>
+</ul>
+</li>
+<li><a href="#bagian-ix--ai-architecture">BAGIAN IX — AI ARCHITECTURE</a><ul>
+<li><a href="#bab-38--ai-co-pilot--multimodal-assistant">Bab 38 — AI Co-Pilot &amp; Multimodal Assistant</a></li>
+</ul>
+</li>
+<li><a href="#bagian-x--future-architecture">BAGIAN X — FUTURE ARCHITECTURE</a><ul>
+<li><a href="#bab-39--cloud-ready-architecture--sync-engine">Bab 39 — Cloud-Ready Architecture &amp; Sync Engine</a></li>
+<li><a href="#bab-40--roadmap-evolusi-arsitektur-5-tahun">Bab 40 — Roadmap Evolusi Arsitektur 5 Tahun</a></li>
+</ul>
+</li>
+<li><a href="#standar-kinerja-non-functional-requirements">STANDAR KINERJA (NON-FUNCTIONAL REQUIREMENTS)</a></li>
+<li><a href="#standar-koding--pola-implementasi">STANDAR KODING &amp; POLA IMPLEMENTASI</a></li>
+<li><a href="#architecture-decision-records-adr">ARCHITECTURE DECISION RECORDS (ADR-001 s/d ADR-020)</a></li>
+<li><a href="#rfc-index">RFC INDEX (RFC-001 s/d RFC-025)</a></li>
+<li><a href="#glosarium-istilah-teknis--bisnis">GLOSARIUM ISTILAH TEKNIS &amp; BISNIS</a></li>
+<li><a href="#appendix">APPENDIX A s/d J</a></li>
+</ul>
+<hr>
+<h1 id="bagian-i-foundation">BAGIAN I — FOUNDATION<a class="header-anchor" href="#bagian-i-foundation" title="Tautan langsung ke seksi ini">#</a></h1>
+<hr>
+<h2 id="bab-1-visi-misi-amp-filosofi-produk">Bab 1 — Visi, Misi &amp; Filosofi Produk<a class="header-anchor" href="#bab-1-visi-misi-amp-filosofi-produk" title="Tautan langsung ke seksi ini">#</a></h2>
+<h3 id="11-apa-itu-kasirio">1.1 Apa itu Kasirio?<a class="header-anchor" href="#11-apa-itu-kasirio" title="Tautan langsung ke seksi ini">#</a></h3>
+<p><strong>Kasirio</strong> adalah platform Point of Sale (POS) dan manajemen operasional bisnis generasi baru yang dirancang secara spesifik untuk Usaha Mikro, Kecil, dan Menengah (UMKM) di Indonesia. Dibangun di atas fondasi arsitektur <strong>Progressive Web App (PWA) Offline-First</strong>, Kasirio mengoperasikan mesin transaksi kasir secara otonom di peramban (browser) pengguna tanpa membutuhkan ketergantungan konstan pada koneksi internet.</p>
+<h3 id="12-visi-produk">1.2 Visi Produk<a class="header-anchor" href="#12-visi-produk" title="Tautan langsung ke seksi ini">#</a></h3>
+<blockquote>
+<p><em>&quot;Mendigitalkan 10 juta UMKM Indonesia melalui platform operasional kasir pintar yang paling andal, transparan, cepat, dan sepenuhnya dimiliki oleh pelaku usaha tanpa hambatan biaya infrastruktur korporasi.&quot;</em></p>
+</blockquote>
+<h3 id="13-misi-produk">1.3 Misi Produk<a class="header-anchor" href="#13-misi-produk" title="Tautan langsung ke seksi ini">#</a></h3>
+<ol>
+<li><strong>Menghilangkan Friksi Checkout:</strong> Memastikan transaksi kasir selesai dalam kurang dari 3 kali sentuhan/klik dengan latensi komputasi lokal di bawah 16 milidetik.</li>
+<li><strong>Kedaulatan Data Mutlak (Data Sovereignty):</strong> Menjamin bahwa setiap data transaksi, riwayat persediaan, dan buku piutang disimpan di perangkat lokal pelaku usaha, dapat dicadangkan, dan tidak pernah disandera oleh vendor SaaS (<em>no vendor lock-in</em>).</li>
+<li><strong>Ketahanan Operasional 100%:</strong> Mengeliminasi downtime akibat putusnya jaringan fiber optic, seluler, atau gangguan listrik melalui arsitektur penyimpanan lokal IndexedDB.</li>
+<li><strong>Demokratisasi Kecerdasan Buatan:</strong> Membawa kapabilitas AI Vision (OCR Nota Pasar Tradisional) ke tangan pedagang kecil untuk mengeliminasi input stok manual yang melelahkan.</li>
+</ol>
+<h3 id="14-nilai-produk-product-values">1.4 Nilai Produk (Product Values)<a class="header-anchor" href="#14-nilai-produk-product-values" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Keandalan Ekstrem (Extreme Reliability):</strong> Kasir tidak boleh mogok saat antrean panjang pembeli sedang menunggu.</li>
+<li><strong>Kesederhanaan Radikal (Radical Simplicity):</strong> Antarmuka intuitif yang dapat dioperasikan oleh kasir berusia 18 hingga 65 tahun tanpa pelatihan teknis formal lebih dari 10 menit.</li>
+<li><strong>Akuntabilitas Finansial (Financial Integrity):</strong> Mencegah kecurangan internal melalui audit log forensik dan gerbang PIN otorisasi ganda.</li>
+</ul>
+<h3 id="15-positioning-pasar">1.5 Positioning Pasar<a class="header-anchor" href="#15-positioning-pasar" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Kasirio diposisikan sebagai <strong>Platform Operasional Bisnis UMKM yang Berpusat pada Kasir (POS-Centric Business Management)</strong>.
+Kasirio <strong>BUKAN</strong> ERP Korporasi yang kaku dan rumit (seperti SAP, Oracle, atau Odoo Enterprise tanpa kustomisasi). Kasirio juga <strong>BUKAN</strong> sekadar aplikasi kalkulator digital tanpa manajemen persediaan. Kasirio berada pada <em>sweet spot</em> antara kemudahan kalkulator kasir dengan ketangguhan sistem akuntansi persediaan berbasis <em>double-entry inventory ledger</em>.</p>
+<pre><code>   Tingkat Kompleksitas
+      ▲
+      │                              [ SAP / Netsuite ]
+      │                              (Terlalu mahal &amp; rumit)
+      │
+      │                 [ Odoo / Mekari Jurnal ]
+      │                 (Fokus Akuntansi Korporasi)
+      │
+      │       ★ KASIRIO ★
+      │       (POS Cepat + Buku Kasbon + Ledger Stok + AI Nota)
+      │       (100% Offline-First, Ramah Sentuh, Zero Config)
+      │
+      │   [ BukuKas / Catatan Manual ]
+      │   (Hanya pembukuan pasif, tanpa POS hardware)
+      └────────────────────────────────────────────────────────► Fokus Operasional Kasir Cepat
+</code></pre>
+<h3 id="16-target-market-amp-karakteristik-pengguna">1.6 Target Market &amp; Karakteristik Pengguna<a class="header-anchor" href="#16-target-market-amp-karakteristik-pengguna" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Kasirio didesain untuk melayani segmen UMKM Indonesia dengan rincian karakteristik spesifik:</p>
+<table>
+<thead>
+<tr>
+<th>Segmen Usaha</th>
+<th>Skala Operasional</th>
+<th>Tantangan Utama</th>
+<th>Kebutuhan Utama Kasirio</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Warung Sembako &amp; Kelontong</strong></td>
+<td>100–1.000 SKU, 50–300 transaksi/hari</td>
+<td>Barcode scanner cepat, bon kasbon langganan tetangga</td>
+<td>Barcode Buffer &lt;50ms, Kasbon Engine terintegrasi</td>
+</tr>
+<tr>
+<td><strong>Coffee Shop &amp; Minuman Kekinian</strong></td>
+<td>20–100 SKU, variasi topping/sugar level</td>
+<td>Kecepatan antrean jam sibuk, cetak struk thermal</td>
+<td>Modifier Varian, Hold/Recall antrean meja, Struk 58mm</td>
+</tr>
+<tr>
+<td><strong>F&amp;B Resto Sederhana / Warteg Modern</strong></td>
+<td>50–150 menu, sistem antre bayar dulu</td>
+<td>Split payment tunai &amp; QRIS, soundbox konfirmasi</td>
+<td>Dynamic QRIS, Soundbox Notifikasi Web Speech API</td>
+</tr>
+<tr>
+<td><strong>Retail Pakaian / Butik</strong></td>
+<td>100–2.000 SKU, variasi ukuran/warna</td>
+<td>Stock opname akurat, label barcode custom</td>
+<td>Matrix Varian, Stock Opname Blind Count</td>
+</tr>
+<tr>
+<td><strong>Usaha Jasa (Barbershop, Laundry)</strong></td>
+<td>10–50 layanan, per kasir/kapster</td>
+<td>Komisi staf, antrean layanan</td>
+<td>Service Mode, Audit log pembukaan laci kasir</td>
+</tr>
+</tbody></table>
+<h3 id="17-unique-selling-proposition-usp">1.7 Unique Selling Proposition (USP)<a class="header-anchor" href="#17-unique-selling-proposition-usp" title="Tautan langsung ke seksi ini">#</a></h3>
+<ol>
+<li><strong>Zero-Latency Offline Mode:</strong> Transaksi 100% berjalan normal saat kabel internet dicabut atau sinyal HP hilang.</li>
+<li><strong>Dynamic QR Code Struk (Paperless):</strong> Hemat biaya kertas thermal dengan menampilkan QR Code berbobot ringan yang dapat dipindai pembeli langsung dari layar kasir.</li>
+<li><strong>OCR Nota Pasar AI:</strong> Foto nota belanja pasar tradisional bertuliskan tangan langsung dikonversi menjadi draf pembelian stok bahan baku via Gemini Vision.</li>
+<li><strong>Monetisasi Koin Kasirio (Closed-Loop Token):</strong> Model langganan tanpa ketergantungan kartu kredit atau potongan 30% App Store — saat ini berjalan dalam mode simulasi sandbox sambil menunggu audit kepatuhan regulasi BI selesai (lihat ADR-006).</li>
+</ol>
+<h3 id="18-problem-solution-matrix">1.8 Problem-Solution Matrix<a class="header-anchor" href="#18-problem-solution-matrix" title="Tautan langsung ke seksi ini">#</a></h3>
+<pre><code>┌──────────────────────────────────────┬──────────────────────────────────────────┐
+│ TANTANGAN UMKM INDONESIA             │ SOLUSI ARSITEKTUR KASIRIO                │
+├──────────────────────────────────────┼──────────────────────────────────────────┤
+│ Internet sering putus di ruko/pasar  │ IndexedDB (Dexie.js) + PWA Service Worker│
+│ Biaya kertas struk thermal mahal     │ Dual-Mode Struk: QR Offline Scanner HP   │
+│ Kasir mencurangi uang kembalian/void │ PIN Gate Otorisasi Owner + Audit Log     │
+│ Input stok nota pasar makan waktu    │ Gemini Flash AI Multimodal Vision OCR    │
+│ Browser sering menghapus data cache  │ navigator.storage.persist() Lock         │
+│ Salah deteksi scanner barcode USB    │ Hardware Barcode Buffer Keydown Listener │
+└──────────────────────────────────────┴──────────────────────────────────────────┘
+</code></pre>
+<hr>
+<h2 id="bab-2-sepuluh-prinsip-arsitektur-kasirio">Bab 2 — Sepuluh Prinsip Arsitektur Kasirio<a class="header-anchor" href="#bab-2-sepuluh-prinsip-arsitektur-kasirio" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Prinsip-prinsip ini mengikat seluruh keputusan desain perangkat lunak, struktur data, antarmuka, dan integrasi di Kasirio. Setiap baris kode yang ditulis harus dapat diuji keselarasan terhadap 10 prinsip ini.</p>
+<h3 id="21-prinsip-1-offline-first">2.1 Prinsip 1: Offline First<a class="header-anchor" href="#21-prinsip-1-offline-first" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Definisi:</strong> Ketiadaan koneksi internet adalah keadaan operasional normal, bukan pengecualian (exception).</li>
+<li><strong>Implikasi Teknis:</strong><ul>
+<li>Basis data lokal (<code>Dexie.js</code> di atas <code>IndexedDB</code>) adalah sumber kebenaran primer (<em>source of truth</em>) saat aplikasi berjalan di kasir.</li>
+<li>Tidak boleh ada permintaan jaringan (network request) yang memblokir rendering antarmuka kasir atau penuntasan transaksi checkout.</li>
+<li>Seluruh pustaka JS, CSS, aset gambar inti, dan font disimpan di dalam cache Service Worker (<em>pre-cached assets</em>).</li>
+</ul>
+</li>
+</ul>
+<h3 id="22-prinsip-2-fast-by-default">2.2 Prinsip 2: Fast by Default<a class="header-anchor" href="#22-prinsip-2-fast-by-default" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Definisi:</strong> Kecepatan adalah fitur inti. Setiap interaksi checkout harus memiliki latensi instan.</li>
+<li><strong>Implikasi Teknis:</strong><ul>
+<li>Latensi respons input tombol kasir &lt; 16ms (60 FPS).</li>
+<li>Latensi komitmen penulisan transaksi ke IndexedDB &lt; 50ms.</li>
+<li>Komponen keranjang belanja (<em>cart engine</em>) mengisolasi re-render hanya pada baris item yang berubah menggunakan React State memoization.</li>
+</ul>
+</li>
+</ul>
+<h3 id="23-prinsip-3-data-ownership">2.3 Prinsip 3: Data Ownership<a class="header-anchor" href="#23-prinsip-3-data-ownership" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Definisi:</strong> Pengguna adalah pemilik tunggal atas data bisnis mereka.</li>
+<li><strong>Implikasi Teknis:</strong><ul>
+<li>Kasirio menyediakan utilitas pencadangan data lokal instan ke dalam format JSON terenkripsi/terkompresi tanpa memerlukan akun cloud.</li>
+<li>Format penyimpanan basis data transparan dan dapat diekspor menjadi CSV/Excel kapan saja.</li>
+</ul>
+</li>
+</ul>
+<h3 id="24-prinsip-4-cloud-ready">2.4 Prinsip 4: Cloud Ready<a class="header-anchor" href="#24-prinsip-4-cloud-ready" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Definisi:</strong> Arsitektur lokal dibangun sedemikian rupa sehingga siap disinkronkan ke cloud tanpa perlu merombak ulang skema data.</li>
+<li><strong>Implikasi Teknis:</strong><ul>
+<li>Semua entitas primer wajib menggunakan pengenal unik global berbasis teks: UUID v4 atau format terurut waktu kustom (<code>TRX-YYYYMMDD-XXXX</code>), bukan integer incrementing lokal yang rentan tabrakan data (collision) saat multi-perangkat digabungkan.</li>
+<li>Semua entitas menyimpan metadata audit: <code>createdAt</code>, <code>updatedAt</code>, dan <code>deletedAt</code> (soft-delete).</li>
+</ul>
+</li>
+</ul>
+<h3 id="25-prinsip-5-security-by-design">2.5 Prinsip 5: Security by Design<a class="header-anchor" href="#25-prinsip-5-security-by-design" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Definisi:</strong> Perlindungan terhadap kecurangan internal kasir dan integritas data dipasang di level terendah aplikasi.</li>
+<li><strong>Implikasi Teknis:</strong><ul>
+<li>PIN Owner disimpan dalam bentuk ter-hash menggunakan salt kriptografis lokal.</li>
+<li>Aksi sensitif (Void penjualan, diskon manual besar, pembukaan laci kas manual) wajib melalui gerbang validasi otorisasi PIN.</li>
+<li>Log audit forensik bersifat <em>immutable</em> (hanya bisa ditambah, tidak bisa diubah atau dihapus via UI).</li>
+</ul>
+</li>
+</ul>
+<h3 id="26-prinsip-6-human-centered-ux-desain-ramah-umkm">2.6 Prinsip 6: Human-Centered UX (Desain Ramah UMKM)<a class="header-anchor" href="#26-prinsip-6-human-centered-ux-desain-ramah-umkm" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Definisi:</strong> Antarmuka dirancang untuk meminimalkan beban kognitif staf kasir di lapangan.</li>
+<li><strong>Implikasi Teknis:</strong><ul>
+<li>Elemen interaktif memiliki target sentuh minimal 48x48 piksel.</li>
+<li>Kontras warna tinggi memenuhi kriteria WCAG AAA untuk visibilitas di layar HP murah atau di bawah pencahayaan terik pasar.</li>
+<li>Semua teks terminologi menggunakan Bahasa Indonesia yang lugas dan natural bagi pedagang (contoh: <em>&quot;Buku Kasbon&quot;</em>, <em>&quot;Cetak Struk&quot;</em>, <em>&quot;Laci Kas&quot;</em>).</li>
+</ul>
+</li>
+</ul>
+<h3 id="27-prinsip-7-modular-architecture">2.7 Prinsip 7: Modular Architecture<a class="header-anchor" href="#27-prinsip-7-modular-architecture" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Definisi:</strong> Modul-modul sistem terisolasi secara logis dengan antarmuka yang didefinisikan secara ketat.</li>
+<li><strong>Implikasi Teknis:</strong><ul>
+<li>Modul POS, Inventori, Keuangan, dan Pengaturan tidak boleh saling mengimpor status internal secara liar; komunikasi dilakukan melalui basis data atau service layer yang terstandarisasi.</li>
+<li>Fitur F&amp;B (Meja, Kitchen Ticket) dapat diaktifkan/dinonaktifkan tanpa menyisakan beban komputasi di mode Retail.</li>
+</ul>
+</li>
+</ul>
+<h3 id="28-prinsip-8-ai-as-assistant-never-replacement">2.8 Prinsip 8: AI as Assistant, Never Replacement<a class="header-anchor" href="#28-prinsip-8-ai-as-assistant-never-replacement" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Definisi:</strong> Kecerdasan Buatan bertindak sebagai asisten pengurang kerja manual, bukan pengambil keputusan mutlak.</li>
+<li><strong>Implikasi Teknis:</strong><ul>
+<li>Fitur AI Vision (OCR Nota Pasar) wajib menerapkan pola <strong>Human-in-the-Loop</strong>: hasil ekstraksi ditampilkan dalam bentuk tabel pratinjau yang wajib divalidasi dan disetujui manusia sebelum stok masuk ke ledger.</li>
+<li>Panggilan model AI tidak boleh menghentikan operasional kasir jika terjadi timeout atau kegagalan kuota API.</li>
+</ul>
+</li>
+</ul>
+<h3 id="29-prinsip-9-indonesian-business-first">2.9 Prinsip 9: Indonesian Business First<a class="header-anchor" href="#29-prinsip-9-indonesian-business-first" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Definisi:</strong> Menghormati dan memfasilitasi budaya bisnis lokal Indonesia secara organik.</li>
+<li><strong>Implikasi Teknis:</strong><ul>
+<li>Dukungan bawaan untuk Kasbon (hutang langganan warung), Soundbox notifikasi pembayaran digital berbasis suara lokal, pembulatan harga ribuan rupiah, serta penyesuaian pajak PB1 Restoran (10%) dan PPN Retail (11-12%).</li>
+</ul>
+</li>
+</ul>
+<h3 id="210-prinsip-10-evolution-without-rebuild">2.10 Prinsip 10: Evolution Without Rebuild<a class="header-anchor" href="#210-prinsip-10-evolution-without-rebuild" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Definisi:</strong> Kode harus dibangun untuk terus berkembang tanpa memerlukan refactoring total saat skala pengguna bertambah.</li>
+<li><strong>Implikasi Teknis:</strong><ul>
+<li>Menggunakan migrasi versi terprogram pada Dexie.js (<code>db.version(x).stores({...}).upgrade(...)</code>).</li>
+<li>Abstraksi hardware (printer, scanner) dibungkus dalam adapter pattern sehingga pergantian driver tidak merusak logika bisnis inti.</li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="bab-3-cakupan-produk-amp-batasan-sistem-product-scope">Bab 3 — Cakupan Produk &amp; Batasan Sistem (Product Scope)<a class="header-anchor" href="#bab-3-cakupan-produk-amp-batasan-sistem-product-scope" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Kasirio membagi evolusi kapabilitas sistemnya ke dalam beberapa tingkatan rilis yang terukur untuk menghindari jebakan <em>scope creep</em>.</p>
+<pre><code>┌────────────────────────────────────────────────────────────────────────┐
+│ V4 — Enterprise UMKM Network (Franchise, Supplier Marketplace, Auto AI) │
+├────────────────────────────────────────────────────────────────────────┤
+│ V3 — Multi-Branch Cloud Sync, Web Dashboard Owner, Realtime Central DB │
+├────────────────────────────────────────────────────────────────────────┤
+│ V2 — Multi-Unit Stok, Kasbon Otomatis WA, Purchasing PO, Split Payment │
+├────────────────────────────────────────────────────────────────────────┤
+│ V1 — Fondasi Stabil, Dexie Normalisasi, PIN Gate, QR Receipt, Barcode   │
+├────────────────────────────────────────────────────────────────────────┤
+│ MVP — Kasir Standalone, Keranjang, Transaksi Tunai/QRIS, Print Thermal │
+└────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="31-detail-matriks-cakupan-versi">3.1 Detail Matriks Cakupan Versi<a class="header-anchor" href="#31-detail-matriks-cakupan-versi" title="Tautan langsung ke seksi ini">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Domain Modul</th>
+<th>MVP</th>
+<th>V1 (Current Production)</th>
+<th>V2 (Planned)</th>
+<th>V3 (Future Cloud)</th>
+<th>V4 (Enterprise)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Storage Engine</strong></td>
+<td>localStorage</td>
+<td>IndexedDB Dexie Normalisasi</td>
+<td>IndexedDB + Chunked Backup</td>
+<td>Local DB + Cloud Sync Mesh</td>
+<td>Multi-Tenant Cloud DB</td>
+</tr>
+<tr>
+<td><strong>Transaksi POS</strong></td>
+<td>Input manual, tunai</td>
+<td>Barcode buffer, Tunai/QRIS/Kasbon</td>
+<td>Split payment, Multi-hold cart</td>
+<td>Multi-register real-time</td>
+<td>Self-Checkout Kiosk</td>
+</tr>
+<tr>
+<td><strong>Struk Belanja</strong></td>
+<td>Thermal print saja</td>
+<td>Thermal 58/80mm + Offline QR</td>
+<td>Integrasi WhatsApp Gateway</td>
+<td>Cloud Digital Invoice Link</td>
+<td>E-Wallet Receipt Push</td>
+</tr>
+<tr>
+<td><strong>Inventori</strong></td>
+<td>Mutasi angka langsung</td>
+<td>Immutable Stock Ledger</td>
+<td>Multi-satuan (Box/Pcs), PO</td>
+<td>Multi-Gudang, Transfer Cabang</td>
+<td>Auto-Replenishment AI</td>
+</tr>
+<tr>
+<td><strong>Keamanan</strong></td>
+<td>Tanpa autentikasi</td>
+<td>Salted PIN Gate + Audit Log</td>
+<td>Role Manager &amp; Cashier terpisah</td>
+<td>Biometrik WebAuthn, JWT Cloud</td>
+<td>Role RBAC Kustom Granular</td>
+</tr>
+<tr>
+<td><strong>AI Co-Pilot</strong></td>
+<td>Belum ada</td>
+<td>OCR Nota Pasar (Human-in-loop)</td>
+<td>Asisten Suara Input Pesanan</td>
+<td>Prediksi Penjualan Harian</td>
+<td>AI Otomatisasi Pajak &amp; Suplai</td>
+</tr>
+</tbody></table>
+<h3 id="32-yang-bukan-bagian-dari-kasirio-anti-scope-boundaries">3.2 Yang BUKAN Bagian dari Kasirio (Anti-Scope / Boundaries)<a class="header-anchor" href="#32-yang-bukan-bagian-dari-kasirio-anti-scope-boundaries" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Untuk menjaga ketajaman dan kecepatan produk, sistem Kasirio secara sadar <strong>TIDAK</strong> mencakup hal-hal berikut:</p>
+<ol>
+<li><strong>Bukan Software Akuntansi Korporasi Double-Entry Penuh:</strong> Kasirio tidak menyediakan buku besar jurnal debet-kredit umum yang rumit, depresiasi aset tetap berwujud, atau integrasi audit perpajakan korporat multi-nasional.</li>
+<li><strong>Bukan Marketplace Publik / E-Commerce Builder:</strong> Kasirio fokus pada manajemen operasional internal toko fisik dan katalog digital sederhana, bukan platform e-commerce multi-vendor seperti Shopee atau Tokopedia.</li>
+<li><strong>Bukan Sistem Payroll &amp; HRIS Kompleks:</strong> Kasirio mencatat shift dan kasbon kasir, tetapi tidak menangani perhitungan PPh 21, BPJS Ketenagakerjaan, atau pengarsipan kontrak karyawan.</li>
+</ol>
+<hr>
+<h2 id="bab-4-terminologi-resmi-amp-ubiquitous-language">Bab 4 — Terminologi Resmi &amp; Ubiquitous Language<a class="header-anchor" href="#bab-4-terminologi-resmi-amp-ubiquitous-language" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Seluruh arsitek, pengembang perangkat lunak, desainer produk, dan pembuat konten teknis wajib menggunakan terminologi yang seragam dalam domain Kasirio:</p>
+<table>
+<thead>
+<tr>
+<th>Istilah Resmi Kasirio</th>
+<th>Konsep Domain Teknis</th>
+<th>Padanan Bahasa Inggris</th>
+<th>Penjelasan Operasional</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Kasir (POS)</strong></td>
+<td>Point of Sale Presentation Layer</td>
+<td>Register / Checkout View</td>
+<td>Layar interaksi utama untuk memasukkan item belanjaan dan menerima pembayaran.</td>
+</tr>
+<tr>
+<td><strong>Keranjang (Cart)</strong></td>
+<td>In-Memory Active Transaction State</td>
+<td>Shopping Cart</td>
+<td>Kumpulan produk, kuantitas, harga, dan diskon yang sedang dihitung sebelum transaksi dibayar.</td>
+</tr>
+<tr>
+<td><strong>Gantung Transaksi (Hold Cart)</strong></td>
+<td>Persisted Temporary Cart State</td>
+<td>Suspended / Parked Order</td>
+<td>Menyimpan sementara keranjang pelanggan yang antre/ditinggal dan melayani pelanggan berikutnya.</td>
+</tr>
+<tr>
+<td><strong>Buku Kasbon</strong></td>
+<td>Accounts Receivable Ledger</td>
+<td>Customer Debt Ledger</td>
+<td>Fasilitas pencatatan utang barang belanjaan pelanggan terpercaya yang dibayar di kemudian hari.</td>
+</tr>
+<tr>
+<td><strong>Laci Kas (Cash Drawer)</strong></td>
+<td>Physical &amp; Logical Cash Storage</td>
+<td>Cash Drawer / Till</td>
+<td>Tempat uang fisik kasir; status buka laci dicatat dalam audit keamanan.</td>
+</tr>
+<tr>
+<td><strong>Shift Kasir</strong></td>
+<td>Cash Accountability Session Window</td>
+<td>Cash Session / Work Shift</td>
+<td>Rentang waktu tugas seorang kasir dari hitungan modal awal hingga serah terima kas akhir.</td>
+</tr>
+<tr>
+<td><strong>Modal Awal</strong></td>
+<td>Shift Starting Balance</td>
+<td>Opening Float</td>
+<td>Uang tunai pecahan kecil yang diletakkan di laci kas saat awal shift untuk kembalian.</td>
+</tr>
+<tr>
+<td><strong>Selisih Kas (Variance)</strong></td>
+<td>Discrepancy Reconciliation</td>
+<td>Cash Variance</td>
+<td>Perbedaan antara hitungan uang fisik kasir (<em>actual count</em>) dan ekspektasi sistem (<em>expected balance</em>).</td>
+</tr>
+<tr>
+<td><strong>Ledger Stok (Stock Logs)</strong></td>
+<td>Immutable Inventory Movement Stream</td>
+<td>Inventory Ledger</td>
+<td>Catatan abadi setiap penambahan atau pengurangan stok barang yang tidak pernah boleh dihapus.</td>
+</tr>
+<tr>
+<td><strong>Struk QR Dinamis</strong></td>
+<td>Offline Compressed Data Payload</td>
+<td>Dynamic QR Receipt</td>
+<td>Kode QR di layar kasir yang memuat ringkasan transaksi berformat JSON terkompresi.</td>
+</tr>
+<tr>
+<td><strong>Soundbox Virtual</strong></td>
+<td>Text-to-Speech Auditory Feedback</td>
+<td>Audio Confirmation Service</td>
+<td>Suara konfirmasi transaksi pembayaran berhasil menggunakan Web Speech API peramban.</td>
+</tr>
+<tr>
+<td><strong>Koin Kasirio</strong></td>
+<td>Closed-Loop Prepaid Service Token</td>
+<td>Internal Service Credit</td>
+<td>Token internal non-moneter untuk memperpanjang masa aktif fitur Pro toko.</td>
+</tr>
+<tr>
+<td><strong>PIN Gate</strong></td>
+<td>Step-Up Authentication Boundary</td>
+<td>Authorization PIN Modal</td>
+<td>Dialog penguncian aksi sensitif yang menuntut otorisasi PIN Owner.</td>
+</tr>
+<tr>
+<td><strong>Batal Transaksi (Void)</strong></td>
+<td>Post-Checkout Invalidation Event</td>
+<td>Transaction Void</td>
+<td>Pembatalan transaksi yang sudah lunas dengan mengembalikan stok barang ke ledger.</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="bab-5-ikhtisar-arsitektur-sistem-high-level-architecture">Bab 5 — Ikhtisar Arsitektur Sistem (High-Level Architecture)<a class="header-anchor" href="#bab-5-ikhtisar-arsitektur-sistem-high-level-architecture" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Kasirio dirancang menggunakan arsitektur multi-layer terisolasi yang menempatkan peramban klien sebagai pusat pemrosesan lokal, didukung oleh Service Worker untuk keandalan offline dan Server Proxy tipis untuk layanan pihak ketiga yang membutuhkan proteksi kredensial.</p>
+<pre><code>┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 KASIRIO CLIENT BROWSER RUNTIME                          │
+│                                                                                         │
+│  ┌───────────────────────────────────────────────────────────────────────────────────┐  │
+│  │                                PRESENTATION LAYER                                 │  │
+│  │   [ POS View ]   [ Inventory ]   [ Reports ]   [ Settings ]   [ Customers/Kasbon ]│  │
+│  │   - Tailwind CSS v4 Responsive Layout        - Lucide Icons &amp; Radix Primitives    │  │
+│  │   - Touch Targets &gt;= 48px                   - High Contrast Color Palette         │  │
+│  └─────────────────────────────────────────▲─────────────────────────────────────────┘  │
+│                                            │ React 19 State Flow                         │
+│  ┌─────────────────────────────────────────▼─────────────────────────────────────────┐  │
+│  │                               APPLICATION / DOMAIN LAYER                          │  │
+│  │  ┌─────────────────────────┐ ┌─────────────────────────┐ ┌─────────────────────┐  │  │
+│  │  │   POSContext &amp; Reducers │ │  Barcode Buffer Manager │ │ Shift &amp; Cash Session│  │  │
+│  │  └─────────────────────────┘ └─────────────────────────┘ └─────────────────────┘  │  │
+│  │  ┌─────────────────────────┐ ┌─────────────────────────┐ ┌─────────────────────┐  │  │
+│  │  │    Cart &amp; Hold Manager  │ │   Security PIN Gate     │ │ Receipt Formatter   │  │  │
+│  │  └─────────────────────────┘ └─────────────────────────┘ └─────────────────────┘  │  │
+│  └─────────────────────────────────────────▲─────────────────────────────────────────┘  │
+│                                            │ Reactive Hooks / Service Invocations        │
+│  ┌─────────────────────────────────────────▼─────────────────────────────────────────┐  │
+│  │                         PERSISTENCE LAYER (OFFLINE-FIRST ENGINE)                  │  │
+│  │   Dexie.js v4 (Object-Relational Wrapper di atas IndexedDB Peramban)              │  │
+│  │   - stores            - products          - transactionItems  - customers         │  │
+│  │   - users/roles       - productVariants   - stockLogs         - customerDebts     │  │
+│  │   - transactions      - categories        - cashSessions      - auditLogs         │  │
+│  └─────────────────────────────────────────▲─────────────────────────────────────────┘  │
+│                                            │ Lock Persistence Request                    │
+│  ┌─────────────────────────────────────────┴─────────────────────────────────────────┐  │
+│  │              Storage Eviction Shield (navigator.storage.persist())                │  │
+│  └───────────────────────────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────────────▲────────────────────────────────────────────┘
+                                             │ Cache Shell &amp; Background Fetch
+┌────────────────────────────────────────────┴────────────────────────────────────────────┐
+│                       SERVICE WORKER LAYER (vite-plugin-pwa)                            │
+│   Cache Strategy: Stale-While-Revalidate (App Bundle) &amp; Cache-First (Fonts/Icons)       │
+└────────────────────────────────────────────▲────────────────────────────────────────────┘
+                                             │ HTTPS Local Loop / External API Calls
+┌────────────────────────────────────────────▼────────────────────────────────────────────┐
+│                        EXTERNAL INTEGRATIONS &amp; COMPANION PROXY                          │
+│  ┌──────────────────────────────────────────┐  ┌─────────────────────────────────────┐  │
+│  │   Express Local/Cloud Lightweight Proxy   │  │   Hardware Peripheral Bridge        │  │
+│  │   - Gemini AI Flash Vision (Nota OCR)    │  │   - Bluetooth / USB Thermal Printer │  │
+│  │   - Web Speech API Virtual Soundbox      │  │   - USB HID Barcode Scanner         │  │
+│  └──────────────────────────────────────────┘  └─────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr>
+<h1 id="bagian-ii-product-architecture">BAGIAN II — PRODUCT ARCHITECTURE<a class="header-anchor" href="#bagian-ii-product-architecture" title="Tautan langsung ke seksi ini">#</a></h1>
+<hr>
+<h2 id="bab-6-technology-stack-bible">Bab 6 — Technology Stack Bible<a class="header-anchor" href="#bab-6-technology-stack-bible" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Pemilihan komponen teknologi pada Kasirio didasarkan pada stabilitas jangka panjang, efisiensi konsumsi memori pada perangkat berspesifikasi rendah (<em>low-end tablets/smartphones</em>), dan kemandirian dari pustaka eksternal yang membengkak.</p>
+<h3 id="61-matriks-teknologi-utama">6.1 Matriks Teknologi Utama<a class="header-anchor" href="#61-matriks-teknologi-utama" title="Tautan langsung ke seksi ini">#</a></h3>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>Teknologi Terpilih</th>
+<th>Versi</th>
+<th>Rationale &amp; Keputusan Arsitektur</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Core Framework</strong></td>
+<td>React</td>
+<td>19.x</td>
+<td>Menggunakan React Compiler modern, optimasi rendering otomatis, dukungan Concurrent Mode untuk menjaga responsivitas UI kasir saat proses I/O berat.</td>
+</tr>
+<tr>
+<td><strong>Build Tool &amp; Bundler</strong></td>
+<td>Vite</td>
+<td>6.x</td>
+<td>Kecepatan Hot Module Replacement (HMR) ekstrem (&lt;100ms), ukuran bundle produksi minimal dengan <em>tree-shaking</em> agresif.</td>
+</tr>
+<tr>
+<td><strong>Language</strong></td>
+<td>TypeScript</td>
+<td>5.8+</td>
+<td><em>Strict mode</em> diaktifkan penuh. Mencegah bug runtime finansial melalui verifikasi tipe data ketat pada seluruh transaksi uang dan kalkulasi stok.</td>
+</tr>
+<tr>
+<td><strong>CSS &amp; Styling</strong></td>
+<td>Tailwind CSS</td>
+<td>4.x</td>
+<td>Engine performa tinggi baru berbasis Rust/LightningCSS, tanpa overhead runtime JavaScript, utilitas ramah sentuhan.</td>
+</tr>
+<tr>
+<td><strong>Local Database Engine</strong></td>
+<td>Dexie.js</td>
+<td>4.x</td>
+<td>Abstraksi IndexedDB terbaik di industri: mendukung transaksi atomik multi-tabel, indeks gabungan (<em>compound indexes</em>), dan reaktivitas instan via <code>dexie-react-hooks</code>.</td>
+</tr>
+<tr>
+<td><strong>Offline PWA Engine</strong></td>
+<td><code>vite-plugin-pwa</code> (Workbox)</td>
+<td>0.21+</td>
+<td>Mengotomatisasi Service Worker lifecycle, caching aset statis, dan registrasi manifest aplikasi tanpa konfigurasi berlebih.</td>
+</tr>
+<tr>
+<td><strong>Iconography</strong></td>
+<td><code>lucide-react</code></td>
+<td>Terbaru</td>
+<td>Ikon SVG berukuran mikro, mudah dikustomisasi, dan mendukung <em>tree-shaking</em> penuh.</td>
+</tr>
+<tr>
+<td><strong>Visual Charting</strong></td>
+<td>Recharts</td>
+<td>3.x</td>
+<td>Visualisasi grafik penjualan harian dan omzet yang ringan, berbasis SVG deklaratif.</td>
+</tr>
+<tr>
+<td><strong>AI Vision Integration</strong></td>
+<td><code>@google/genai</code> (SDK)</td>
+<td>2.x</td>
+<td>Integrasi multimodal native ke model Gemini Flash untuk OCR nota pasar dengan token latency terendah.</td>
+</tr>
+<tr>
+<td><strong>Testing Harness</strong></td>
+<td>Vitest</td>
+<td>3.x</td>
+<td>Runner pengujian unit terintegrasi dengan konfigurasi Vite, mengeksekusi ratusan tes kalkulasi finansial dalam hitungan detik.</td>
+</tr>
+</tbody></table>
+<h3 id="62-prinsip-eliminasi-dependensi-zero-bloat-policy">6.2 Prinsip Eliminasi Dependensi (Zero Bloat Policy)<a class="header-anchor" href="#62-prinsip-eliminasi-dependensi-zero-bloat-policy" title="Tautan langsung ke seksi ini">#</a></h3>
+<ol>
+<li><strong>Dilarang Menggunakan Moment.js:</strong> Manipulasi waktu wajib menggunakan standar native JavaScript <code>Intl.DateTimeFormat</code> atau pustaka fungsional mikro murni jika mutlak diperlukan.</li>
+<li><strong>Dilarang Menggunakan Heavy UI Component Kits:</strong> Kasirio menghindari pustaka UI raksasa yang menyuntikkan ratusan CSS kelas tak terpakai. Seluruh modal, drawer, dan toast dibangun menggunakan Tailwind murni dengan utilitas aksesibilitas standar.</li>
+</ol>
+<hr>
+<h2 id="bab-7-struktur-direktori-amp-organisasi-kode">Bab 7 — Struktur Direktori &amp; Organisasi Kode<a class="header-anchor" href="#bab-7-struktur-direktori-amp-organisasi-kode" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Kasirio mengadopsi arsitektur berbasis fitur (<em>feature-based folder structure</em>) yang menggabungkan prinsip Domain-Driven Design untuk memudahkan navigasi kode dan isolasi batas modul.</p>
+<pre><code>c:\Users\LOQ\Downloads\Kasirio/
+├── docs/                                 # Dokumentasi Arsitektur &amp; Acuan Sistem
+│   ├── KASIRIO_ARCHITECTURE_BIBLE_v1.0.md# Dokumen Master Blueprint Ini
+│   ├── ARCHITECTURE.md                  # Ringkasan Cepat Arsitektur
+│   └── references/                      # Catatan Riset Pasar &amp; Pengetahuan Produk
+├── public/                               # Aset Statis Publik
+│   ├── icons/                           # Ikon PWA Maskable (192px, 512px)
+│   ├── favicon.ico
+│   └── manifest.webmanifest             # Spesifikasi Manifest Web App
+├── src/
+│   ├── components/                      # Komponen Presentasi Terisolasi per Domain
+│   │   ├── common/                      # Komponen Bersama (Button, Modal, Input, Badge)
+│   │   ├── pos/                         # Mesin Antarmuka Kasir Utama
+│   │   │   ├── POSView.tsx              # Shell Container Kasir
+│   │   │   ├── ProductGrid.tsx          # Tampilan Grid/List Katalog Barang
+│   │   │   ├── CartDrawer.tsx           # Keranjang Belanja &amp; Perhitungan
+│   │   │   ├── CheckoutModal.tsx        # Modal Pemilihan Metode Pembayaran
+│   │   │   ├── ReceiptModal.tsx         # Pratinjau Struk Cetak &amp; Dynamic QR
+│   │   │   ├── HoldOrdersModal.tsx      # Manajemen Antrean Pesanan Menggantung
+│   │   │   └── SoundboxToast.tsx        # Visual Notifikasi Suara Web Speech
+│   │   ├── inventory/                   # Manajemen Inventori &amp; Katalog
+│   │   │   ├── InventoryView.tsx        # Tabel Manajemen Produk &amp; Stok
+│   │   │   ├── ProductFormModal.tsx     # Form Tambah/Ubah Produk &amp; Barcode
+│   │   │   ├── StockAdjustmentModal.tsx # Form Penyesuaian Mutasi Stok Cepat
+│   │   │   ├── StockOpnameView.tsx      # Layar Hitung Fisik Barang (Blind Count)
+│   │   │   └── NotaScannerModal.tsx     # Modal Kamera &amp; Review AI Vision OCR
+│   │   ├── customers/                   # Manajemen Pelanggan &amp; Buku Kasbon
+│   │   │   ├── CustomerListView.tsx     # Database Pelanggan Toko
+│   │   │   └── DebtLedgerModal.tsx      # Rincian Bon Hutang &amp; Pembayaran Parsial
+│   │   ├── reports/                     # Laporan Finansial &amp; Audit
+│   │   │   ├── ReportsView.tsx          # Dashboard Omzet &amp; Margin Laba Kotor
+│   │   │   ├── DailySalesReport.tsx     # Rincian Transaksi per Hari
+│   │   │   └── AuditLogView.tsx         # Layar Investigasi Keamanan &amp; Void
+│   │   ├── shift/                       # Manajemen Laci Kasir
+│   │   │   ├── CashSessionModal.tsx     # Form Buka / Tutup Shift Kasir
+│   │   │   └── CashMovementModal.tsx    # Catatan Kas Masuk / Kas Keluar Operasional
+│   │   ├── settings/                    # Konfigurasi Toko &amp; Perangkat
+│   │   │   ├── SettingsView.tsx         # Form Nama Toko, Alamat, Format Pajak
+│   │   │   ├── BackupRestoreModal.tsx   # Ekspor / Impor JSON Cadangan Data
+│   │   │   └── KoinBillingView.tsx      # Tampilan Saldo &amp; Topup Koin Kasirio
+│   │   └── shortcuts/                   # Aksesibilitas Keyboard Fisik
+│   │       └── KeyboardShortcutsHelp.tsx# Panduan Tombol Cepat (F1-F12, Space, Enter)
+│   ├── context/                         # State Management Global Aplikasi
+│   │   ├── POSContext.tsx               # Context Transaksi, Keranjang, &amp; Sesi Aktif
+│   │   └── SecurityContext.tsx          # Context Autentikasi PIN &amp; Otorisasi Role
+│   ├── db/                              # Konfigurasi &amp; Abstraksi Basis Data Lokal
+│   │   ├── index.ts                     # Instansiasi Dexie DB, Migrasi, &amp; Persistence Guard
+│   │   └── seedData.ts                  # Data Awal Standar (Demo/Inisialisasi Toko)
+│   ├── hooks/                           # Custom React Hooks
+│   │   ├── useBarcodeBuffer.ts          # Hook Pendeteksi Hardware Scanner Cepat
+│   │   ├── useSoundbox.ts               # Hook Sintesis Suara Pembayaran
+│   │   └── useThermalPrinter.ts         # Hook Abstraksi Driver Cetak ESC/POS
+│   ├── services/                        # Integrasi Layanan Eksternal &amp; Hardware
+│   │   ├── aiService.ts                 # Service Panggilan Proxy Gemini AI OCR
+│   │   ├── printerService.ts            # Komposisi Format Cetak 58mm/80mm
+│   │   └── backupService.ts             # Kompresi &amp; Validasi Integritas JSON
+│   ├── utils/                           # Fungsi Pembantu Murni (Pure Utility Functions)
+│   │   ├── currency.ts                  # Pemformat Rupiah (Rp XX.XXX)
+│   │   ├── date.ts                      # Pemformat Waktu Standar Indonesia (WIB/WITA/WIT)
+│   │   ├── security.ts                  # Hash PIN Kriptografis (SHA-256 + Salt)
+│   │   └── qrPayload.ts                 # Kompresor Payload Offline Dynamic QR
+│   ├── types/                           # Definisi Kontrak Tipe TypeScript
+│   │   └── index.ts                     # Model Domain Data Lengkap Kasirio
+│   ├── App.tsx                          # Shell Navigasi Utama Aplikasi
+│   └── main.tsx                         # Entry Point React DOM &amp; Registrasi Service Worker
+├── server.ts                            # Lightweight Express Proxy (AI API Key Shield)
+├── vite.config.ts                       # Konfigurasi Build Vite &amp; Plugin PWA
+├── tsconfig.json                        # Aturan Kompiler TypeScript
+├── package.json                         # Manifes Dependensi Proyek
+└── AGENTS.md                            # Aturan Tata Kelola AI Agent &amp; Keamanan
+</code></pre>
+<hr>
+<h2 id="bab-8-arsitektur-modul-amp-batasan-konteks-bounded-context">Bab 8 — Arsitektur Modul &amp; Batasan Konteks (Bounded Context)<a class="header-anchor" href="#bab-8-arsitektur-modul-amp-batasan-konteks-bounded-context" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Kasirio mengimplementasikan prinsip Domain-Driven Design (DDD) ringan melalui pembagian Bounded Context yang tegas untuk mencegah kopling erat antar modul:</p>
+<pre><code>┌──────────────────┐           ┌──────────────────┐
+│  SALES &amp; POS     │◄──────────┤  INVENTORY CORE  │
+│  CONTEXT         │           │  CONTEXT         │
+│  (Cart, Ringing, │           │  (Ledger, SKU,   │
+│   Tender, QR)    │           │   Stock Opname)  │
+└────────┬─────────┘           └────────▲─────────┘
+         │                              │
+         │ Emits Checkout Completed     │ Emits Restock / Mutasi
+         ▼                              │
+┌──────────────────┐           ┌────────┴─────────┐
+│  FINANCE &amp; CASH  │           │  PURCHASING &amp; AI │
+│  SESSION CONTEXT │           │  CONTEXT         │
+│  (Drawer, Shift, │           │  (Supplier, PO,  │
+│   Kasbon Ledger) │           │   Gemini OCR)    │
+└──────────────────┘           └──────────────────┘
+</code></pre>
+<h3 id="81-aturan-komunikasi-antar-modul">8.1 Aturan Komunikasi Antar Modul<a class="header-anchor" href="#81-aturan-komunikasi-antar-modul" title="Tautan langsung ke seksi ini">#</a></h3>
+<ol>
+<li><strong>Modul POS Tidak Boleh Mengubah Field Stok Secara Langsung:</strong>
+Setiap pengurangan barang akibat penjualan wajib memicu entri mutasi melalui metode <code>recordStockMovement({ type: &#39;SALE&#39;, ... })</code> pada Inventory Ledger.</li>
+<li><strong>Modul Kasbon Terisolasi dari Saldo Kas Laci Fisik:</strong>
+Transaksi berstatus <code>KASBON</code> tidak menambah saldo uang tunai fisik di <code>cashSessions</code>, melainkan menerbitkan piutang aktif di <code>customerDebts</code>. Pembayaran kasbon di kemudian hari baru menambah saldo kas riil.</li>
+</ol>
+<hr>
+<h2 id="bab-9-arsitektur-routing-amp-navigasi">Bab 9 — Arsitektur Routing &amp; Navigasi<a class="header-anchor" href="#bab-9-arsitektur-routing-amp-navigasi" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Kasirio menggunakan pola navigasi <strong>Single-Page Application (SPA) Berbasis Tab Preservasi Status</strong> (<em>View-Based State Preservation Routing</em>).</p>
+<h3 id="91-mengapa-tidak-menggunakan-url-multi-page-tradisional">9.1 Mengapa Tidak Menggunakan URL Multi-Page Tradisional?<a class="header-anchor" href="#91-mengapa-tidak-menggunakan-url-multi-page-tradisional" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Dalam lingkungan kasir fisik, kasir sering kali harus beralih seketika dari layar Penjualan ke layar Cek Stok tanpa boleh me-reload browser atau merusak status keranjang belanja aktif. Navigasi berbasis pergantian view internal memastikan perpindahan halaman berlangsung dalam waktu <strong>&lt;16 milidetik</strong> tanpa flicker layar.</p>
+<pre><code>       [ App Shell Controller ]
+                  │
+     ┌────────────┼────────────┬────────────┐
+     ▼            ▼            ▼            ▼
+ [ POS View ] [ Inventori ] [ Laporan ] [ Pengaturan ]
+  (Aktif &amp;     (Lazy Loaded (Lazy Loaded (Lazy Loaded
+  Terjaga       di Memori)   di Memori)   di Memori)
+  di Memori)
+</code></pre>
+<h3 id="92-kebijakan-lazy-loading">9.2 Kebijakan Lazy Loading<a class="header-anchor" href="#92-kebijakan-lazy-loading" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li>Komponen <code>POSView</code> dimuat segera (<em>eager loading</em>) saat aplikasi dibuka untuk menjamin waktu buka (<em>startup time</em>) instan.</li>
+<li>Komponen berat seperti <code>ReportsView</code> (yang memuat Recharts) dan <code>SettingsView</code> dimuat secara dinamis (<em>lazy loaded</em>) via <code>React.lazy()</code> saat tab tersebut pertama kali diklik.</li>
+</ul>
+<hr>
+<h2 id="bab-10-arsitektur-state-management">Bab 10 — Arsitektur State Management<a class="header-anchor" href="#bab-10-arsitektur-state-management" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Kasirio membedakan tiga tingkatan state untuk menjaga kebersihan arsitektur dan efisiensi memori:</p>
+<pre><code>┌──────────────────────────────────────────────────────────────────────┐
+│ 1. EPHEMERAL UI STATE (Local React useState / useReducer)            │
+│    - Status modal terbuka/tertutup, teks pencarian barang, fokus input│
+├──────────────────────────────────────────────────────────────────────┤
+│ 2. ACTIVE SESSION TRANSACTION STATE (POSContext / React Context)     │
+│    - Keranjang aktif (items, diskon manual), pelanggan terpilih,     │
+│      sesi shift kasir yang sedang berjalan                           │
+├──────────────────────────────────────────────────────────────────────┤
+│ 3. PERSISTENT DOMAIN DATA (Dexie.js IndexedDB + useLiveQuery)        │
+│    - Katalog produk, riwayat transaksi, mutasi ledger stok, kasbon   │
+└──────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<h3 id="101-pola-reaktivitas-uselivequery">10.1 Pola Reaktivitas <code>useLiveQuery</code><a class="header-anchor" href="#101-pola-reaktivitas-uselivequery" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Kasirio memanfaatkan kapabilitas <code>dexie-react-hooks</code>. Ketika ada penambahan transaksi baru atau perubahan stok di basis data lokal, UI yang memantau tabel tersebut akan ter-update secara otomatis secara asinkron tanpa memerlukan state dispatcher manual yang rentan mengalami <em>desynchronization</em>.</p>
+<hr>
+<h1 id="bagian-iii-database-architecture">BAGIAN III — DATABASE ARCHITECTURE<a class="header-anchor" href="#bagian-iii-database-architecture" title="Tautan langsung ke seksi ini">#</a></h1>
+<hr>
+<h2 id="bab-11-filosofi-basis-data-offline-first">Bab 11 — Filosofi Basis Data Offline-First<a class="header-anchor" href="#bab-11-filosofi-basis-data-offline-first" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Penyimpanan data lokal di Kasirio dibangun dengan prinsip-prinsip mutlak berikut:</p>
+<ol>
+<li><strong>IndexedDB Sebagai Sumber Kebenaran Mutlak:</strong>
+Menggantikan <code>localStorage</code> yang memiliki keterbatasan kritis: batasan kuota hanya ±5MB, sifat operasi sinkron yang memblokir main thread browser, serta ketiadaan dukungan indeks pencarian terstruktur.</li>
+<li><strong>Kemandirian Perangkat (Device Autonomy):</strong>
+Setiap terminal kasir dapat beroperasi penuh tanpa bergantung pada ketersediaan server cloud atau basis data sentral.</li>
+<li><strong>Pemberian Identitas UUID Terdesentralisasi:</strong>
+Semua baris data menggunakan kunci primer UUID v4 atau string bertanggal yang dijamin unik secara global, mencegah benturan data saat fase sinkronisasi cloud di masa mendatang.</li>
+</ol>
+<hr>
+<h2 id="bab-12-dexie-schema-bible-spesifikasi-21-tabel">Bab 12 — Dexie Schema Bible (Spesifikasi 21 Tabel)<a class="header-anchor" href="#bab-12-dexie-schema-bible-spesifikasi-21-tabel" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Berikut adalah cetak biru skema lengkap untuk seluruh 21 tabel di basis data Dexie.js Kasirio (<code>KasirioDatabase</code>):</p>
+<pre><code class="language-typescript">// Registrasi Skema Dexie Database
+this.version(3).stores({
+  stores: &#39;id, name, businessType&#39;,
+  users: &#39;id, name, role, isActive&#39;,
+  roles: &#39;id, name&#39;,
+  products: &#39;id, sku, barcode, categoryId, name, sellPrice, stock, deletedAt&#39;,
+  productVariants: &#39;id, productId, name, sku, barcode&#39;,
+  categories: &#39;id, name&#39;,
+  transactions: &#39;id, date, paymentMethod, status, cashierName, total, isAuditFlagged&#39;,
+  transactionItems: &#39;id, transactionId, productId&#39;,
+  payments: &#39;id, transactionId, method, status, date&#39;,
+  stockLogs: &#39;id, productId, type, date&#39;,
+  suppliers: &#39;id, name, phone&#39;,
+  purchases: &#39;id, invoiceNumber, supplierId, date, status&#39;,
+  purchaseItems: &#39;id, purchaseId, productId&#39;,
+  customers: &#39;id, name, phone, totalDebt&#39;,
+  customerDebts: &#39;id, customerId, transactionId, status, dueDate&#39;,
+  debtPayments: &#39;id, customerId, debtId, date&#39;,
+  suspendedCarts: &#39;id, label, createdAt&#39;,
+  cashSessions: &#39;id, cashierId, status, startTime&#39;,
+  auditLogs: &#39;id, timestamp, type, cashierName&#39;,
+  appSettings: &#39;id&#39;,
+  billingPlans: &#39;id, name, isActive&#39;,
+  koinLedger: &#39;id, storeId, type, date&#39;
+});
+</code></pre>
+<hr>
+<h3 id="tabel-1-stores">Tabel 1: <code>stores</code><a class="header-anchor" href="#tabel-1-stores" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Menyimpan profil dan identitas toko fisik tempat aplikasi berjalan.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>name</code>: <code>string</code></li>
+<li><code>businessType</code>: <code>&#39;RETAIL&#39; | &#39;FNB&#39; | &#39;SERVICE&#39;</code></li>
+<li><code>address</code>: <code>string</code></li>
+<li><code>phone</code>: <code>string</code></li>
+<li><code>headerMessage</code>: <code>string</code></li>
+<li><code>footerMessage</code>: <code>string</code></li>
+<li><code>createdAt</code>: <code>string</code> (ISO-8601)</li>
+<li><code>updatedAt</code>: <code>string</code> (ISO-8601)</li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, name, businessType</code></li>
+<li><strong>Virtual Foreign Key:</strong> Tidak ada (Entitas root)</li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;str-98a7b6c5-d4e3-4f2a-1b0c-9d8e7f6a5b4c&quot;,
+  &quot;name&quot;: &quot;Warung Kelontong Berkah&quot;,
+  &quot;businessType&quot;: &quot;RETAIL&quot;,
+  &quot;address&quot;: &quot;Jl. Raya Pasar Minggu No. 42, Jakarta Selatan&quot;,
+  &quot;phone&quot;: &quot;081234567890&quot;,
+  &quot;headerMessage&quot;: &quot;Selamat Belanja di Toko Berkah&quot;,
+  &quot;footerMessage&quot;: &quot;Barang yang sudah dibeli tidak dapat ditukar&quot;,
+  &quot;createdAt&quot;: &quot;2026-01-01T08:00:00.000Z&quot;,
+  &quot;updatedAt&quot;: &quot;2026-01-01T08:00:00.000Z&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.stores.get(&#39;str-...&#39;)</code></li>
+<li><strong>Risiko Teknis:</strong> Modifikasi profil toko di tengah transaksi dapat mengubah header struk cetak.</li>
+<li><strong>Catatan Migrasi:</strong> Dibuat pada versi 1; jika toko tunggal, tabel hanya memuat 1 baris.</li>
+</ul>
+<hr>
+<h3 id="tabel-2-users">Tabel 2: <code>users</code><a class="header-anchor" href="#tabel-2-users" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Menyimpan kredensial kasir dan pemilik toko untuk autentikasi dan PIN Gate.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID, PK)</li>
+<li><code>name</code>: <code>string</code></li>
+<li><code>role</code>: <code>&#39;OWNER&#39; | &#39;MANAGER&#39; | &#39;CASHIER&#39;</code></li>
+<li><code>pinHash</code>: <code>string</code> (Salted SHA-256)</li>
+<li><code>pinSalt</code>: <code>string</code> (Random Hex Salt)</li>
+<li><code>isActive</code>: <code>boolean</code></li>
+<li><code>createdAt</code>: <code>string</code> (ISO-8601)</li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, name, role, isActive</code></li>
+<li><strong>Virtual Foreign Key:</strong> <code>role</code> mengacu ke tabel <code>roles.id</code></li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;usr-11111111-2222-3333-4444-555555555555&quot;,
+  &quot;name&quot;: &quot;Budi Santoso (Owner)&quot;,
+  &quot;role&quot;: &quot;OWNER&quot;,
+  &quot;pinHash&quot;: &quot;e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855&quot;,
+  &quot;pinSalt&quot;: &quot;9a8b7c6d5e4f&quot;,
+  &quot;isActive&quot;: true,
+  &quot;createdAt&quot;: &quot;2026-01-01T08:00:00.000Z&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.users.where(&#39;isActive&#39;).equals(1).toArray()</code></li>
+<li><strong>Risiko Teknis:</strong> Pemilik lupa PIN master dapat mengunci fitur sensitif jika tidak ada mekanisme reset lokal yang aman.</li>
+<li><strong>Catatan Migrasi:</strong> Menambahkan field <code>pinSalt</code> pada versi migrasi skema v2 untuk mencegah serangan kamus lookup.</li>
+</ul>
+<hr>
+<h3 id="tabel-3-roles">Tabel 3: <code>roles</code><a class="header-anchor" href="#tabel-3-roles" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Definisi hak akses dan kapabilitas untuk setiap peran pengguna.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (<code>&#39;OWNER&#39; | &#39;MANAGER&#39; | &#39;CASHIER&#39;</code>, PK)</li>
+<li><code>name</code>: <code>string</code></li>
+<li><code>permissions</code>: <code>string[]</code> (Array kode permission)</li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, name</code></li>
+<li><strong>Virtual Foreign Key:</strong> Tidak ada</li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;CASHIER&quot;,
+  &quot;name&quot;: &quot;Kasir Pelaksana&quot;,
+  &quot;permissions&quot;: [&quot;POS_RING&quot;, &quot;POS_HOLD&quot;, &quot;POS_CASH_COUNT&quot;, &quot;RECEIPT_PRINT&quot;]
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.roles.get(user.role)</code></li>
+<li><strong>Risiko Teknis:</strong> Kesalahan pengisian array permission dapat meloloskan kasir melakukan void transaksi.</li>
+<li><strong>Catatan Migrasi:</strong> Seeding data standar diinisialisasi saat pertama kali basis data dibuat.</li>
+</ul>
+<hr>
+<h3 id="tabel-4-products">Tabel 4: <code>products</code><a class="header-anchor" href="#tabel-4-products" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Katalog barang/jasa utama yang dijual toko.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>sku</code>: <code>string</code></li>
+<li><code>barcode</code>: <code>string</code></li>
+<li><code>name</code>: <code>string</code></li>
+<li><code>categoryId</code>: <code>string</code></li>
+<li><code>buyPrice</code>: <code>number</code> (HPP Dasar)</li>
+<li><code>sellPrice</code>: <code>number</code> (Harga Jual Standar)</li>
+<li><code>stock</code>: <code>number</code> (Proyeksi Stok Tersedia)</li>
+<li><code>minStock</code>: <code>number</code> (Ambang Batas Minimum)</li>
+<li><code>unit</code>: <code>string</code> (Pcs, Kg, Botol, Porsi)</li>
+<li><code>imageUrl</code>: <code>string | null</code></li>
+<li><code>deletedAt</code>: <code>string | null</code> (Soft-delete timestamp)</li>
+<li><code>createdAt</code>: <code>string</code> (ISO-8601)</li>
+<li><code>updatedAt</code>: <code>string</code> (ISO-8601)</li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, sku, barcode, categoryId, name, sellPrice, stock, deletedAt</code></li>
+<li><strong>Virtual Foreign Key:</strong> <code>categoryId</code> -&gt; <code>categories.id</code></li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;prd-550e8400-e29b-41d4-a716-446655440000&quot;,
+  &quot;sku&quot;: &quot;MIN-AQUA-600&quot;,
+  &quot;barcode&quot;: &quot;8886008101053&quot;,
+  &quot;name&quot;: &quot;Aqua Air Mineral 600ml&quot;,
+  &quot;categoryId&quot;: &quot;cat-minuman&quot;,
+  &quot;buyPrice&quot;: 2500,
+  &quot;sellPrice&quot;: 3500,
+  &quot;stock&quot;: 48,
+  &quot;minStock&quot;: 10,
+  &quot;unit&quot;: &quot;Botol&quot;,
+  &quot;imageUrl&quot;: null,
+  &quot;deletedAt&quot;: null,
+  &quot;createdAt&quot;: &quot;2026-01-01T08:00:00.000Z&quot;,
+  &quot;updatedAt&quot;: &quot;2026-01-01T08:00:00.000Z&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong><ul>
+<li>Cari barcode: <code>db.products.where(&#39;barcode&#39;).equals(code).and(p =&gt; !p.deletedAt).first()</code></li>
+<li>Tampilkan barang aktif: <code>db.products.where(&#39;deletedAt&#39;).equals(null).toArray()</code></li>
+</ul>
+</li>
+<li><strong>Risiko Teknis:</strong> Data corrupt jika nilai <code>stock</code> dimutasi tanpa menulis entri di <code>stockLogs</code>.</li>
+<li><strong>Catatan Migrasi:</strong> Penambahan indeks <code>deletedAt</code> pada migrasi v2 untuk mendukung soft-delete efisien.</li>
+</ul>
+<hr>
+<h3 id="tabel-5-productvariants">Tabel 5: <code>productVariants</code><a class="header-anchor" href="#tabel-5-productvariants" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Menyimpan varian produk (misal: Ukuran, Warna, Suhu, Rasa).</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>productId</code>: <code>string</code></li>
+<li><code>name</code>: <code>string</code> (contoh: &quot;Dingin / Less Sugar&quot;)</li>
+<li><code>sku</code>: <code>string</code></li>
+<li><code>barcode</code>: <code>string | null</code></li>
+<li><code>priceModifier</code>: <code>number</code> (Selisih harga terhadap produk induk, misal: +3000)</li>
+<li><code>stockModifier</code>: <code>number</code></li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, productId, name, sku, barcode</code></li>
+<li><strong>Virtual Foreign Key:</strong> <code>productId</code> -&gt; <code>products.id</code></li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;var-777-888&quot;,
+  &quot;productId&quot;: &quot;prd-kopi-susu&quot;,
+  &quot;name&quot;: &quot;Ukuran Large (Es)&quot;,
+  &quot;sku&quot;: &quot;KOP-SUSU-LRG&quot;,
+  &quot;barcode&quot;: &quot;8991234567891&quot;,
+  &quot;priceModifier&quot;: 4000,
+  &quot;stockModifier&quot;: 0
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.productVariants.where(&#39;productId&#39;).equals(targetId).toArray()</code></li>
+<li><strong>Risiko Teknis:</strong> Orphan variants jika produk induk dihapus permanen (<em>hard delete</em>).</li>
+<li><strong>Catatan Migrasi:</strong> Diperkenalkan untuk mendukung bisnis F&amp;B dan Retail Fashion.</li>
+</ul>
+<hr>
+<h3 id="tabel-6-categories">Tabel 6: <code>categories</code><a class="header-anchor" href="#tabel-6-categories" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Pengelompokan taksonomi produk untuk filter cepat di kasir.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (PK)</li>
+<li><code>name</code>: <code>string</code></li>
+<li><code>icon</code>: <code>string | null</code></li>
+<li><code>color</code>: <code>string | null</code></li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, name</code></li>
+<li><strong>Virtual Foreign Key:</strong> Tidak ada</li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;cat-sembako&quot;,
+  &quot;name&quot;: &quot;Bahan Pokok &amp; Sembako&quot;,
+  &quot;icon&quot;: &quot;shopping-bag&quot;,
+  &quot;color&quot;: &quot;#10B981&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.categories.toArray()</code></li>
+<li><strong>Risiko Teknis:</strong> Penghapusan kategori menyebabkan produk kehilangan tautan tampilan.</li>
+<li><strong>Catatan Migrasi:</strong> Data standar disuntikkan pada saat seeding pertama.</li>
+</ul>
+<hr>
+<h3 id="tabel-7-transactions">Tabel 7: <code>transactions</code><a class="header-anchor" href="#tabel-7-transactions" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Header data penjualan yang memuat ringkasan finansial transaksi.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (Nomor Faktur / Invoice, misal: <code>TRX-20260917-001</code>, PK)</li>
+<li><code>date</code>: <code>string</code> (ISO-8601)</li>
+<li><code>paymentMethod</code>: <code>&#39;TUNAI&#39; | &#39;QRIS&#39; | &#39;TRANSFER&#39; | &#39;KASBON&#39;</code></li>
+<li><code>subtotal</code>: <code>number</code></li>
+<li><code>discount</code>: <code>number</code> (Potongan order-level)</li>
+<li><code>tax</code>: <code>number</code> (PPN/PB1)</li>
+<li><code>serviceFee</code>: <code>number</code></li>
+<li><code>total</code>: <code>number</code> (Total Tagihan Akhir)</li>
+<li><code>totalCost</code>: <code>number</code> (Total HPP untuk kalkulasi laba)</li>
+<li><code>profit</code>: <code>number</code> (<code>total - totalCost</code>)</li>
+<li><code>amountPaid</code>: <code>number</code> (Nominal yang diserahkan pembeli)</li>
+<li><code>change</code>: <code>number</code> (Uang kembalian)</li>
+<li><code>customerId</code>: <code>string | null</code></li>
+<li><code>cashierName</code>: <code>string</code></li>
+<li><code>status</code>: <code>&#39;LUNAS&#39; | &#39;KASBON&#39; | &#39;BATAL&#39;</code></li>
+<li><code>isAuditFlagged</code>: <code>boolean</code> (Apakah transaksi dicurigai/melalui PIN gate)</li>
+<li><code>voidReason</code>: <code>string | null</code></li>
+<li><code>voidDate</code>: <code>string | null</code></li>
+<li><code>notes</code>: <code>string | null</code></li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, date, paymentMethod, status, cashierName, total, isAuditFlagged</code></li>
+<li><strong>Virtual Foreign Key:</strong> <code>customerId</code> -&gt; <code>customers.id</code></li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;TRX-20260917-0001&quot;,
+  &quot;date&quot;: &quot;2026-09-17T10:15:30.000Z&quot;,
+  &quot;paymentMethod&quot;: &quot;TUNAI&quot;,
+  &quot;subtotal&quot;: 50000,
+  &quot;discount&quot;: 5000,
+  &quot;tax&quot;: 0,
+  &quot;serviceFee&quot;: 0,
+  &quot;total&quot;: 45000,
+  &quot;totalCost&quot;: 32000,
+  &quot;profit&quot;: 13000,
+  &quot;amountPaid&quot;: 50000,
+  &quot;change&quot;: 5000,
+  &quot;customerId&quot;: null,
+  &quot;cashierName&quot;: &quot;Siti Aminah&quot;,
+  &quot;status&quot;: &quot;LUNAS&quot;,
+  &quot;isAuditFlagged&quot;: false,
+  &quot;voidReason&quot;: null,
+  &quot;voidDate&quot;: null,
+  &quot;notes&quot;: null
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong><ul>
+<li>Ambil omzet harian: <code>db.transactions.where(&#39;date&#39;).between(startISO, endISO).toArray()</code></li>
+<li>Filter transaksi audit: <code>db.transactions.where(&#39;isAuditFlagged&#39;).equals(1).toArray()</code></li>
+</ul>
+</li>
+<li><strong>Risiko Teknis:</strong> Pembuatan nomor invoice duplikat jika dua kasir bekerja tanpa sinkronisasi penomoran.</li>
+<li><strong>Catatan Migrasi:</strong> Dipisahkan dari rincian item sejak v2 demi efisiensi query dan pelaporan agregat.</li>
+</ul>
+<hr>
+<h3 id="tabel-8-transactionitems">Tabel 8: <code>transactionItems</code><a class="header-anchor" href="#tabel-8-transactionitems" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Rincian baris barang (<em>line items</em>) dari setiap transaksi penjualan.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>transactionId</code>: <code>string</code></li>
+<li><code>productId</code>: <code>string</code></li>
+<li><code>productName</code>: <code>string</code></li>
+<li><code>sku</code>: <code>string</code></li>
+<li><code>unit</code>: <code>string</code></li>
+<li><code>buyPrice</code>: <code>number</code> (HPP pada saat transaksi terjadi)</li>
+<li><code>sellPrice</code>: <code>number</code> (Harga jual satuan saat transaksi)</li>
+<li><code>quantity</code>: <code>number</code></li>
+<li><code>discount</code>: <code>number</code> (Diskon baris barang)</li>
+<li><code>subtotal</code>: <code>number</code> (<code>(sellPrice * quantity) - discount</code>)</li>
+<li><code>notes</code>: <code>string | null</code></li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, transactionId, productId</code></li>
+<li><strong>Virtual Foreign Key:</strong> <code>transactionId</code> -&gt; <code>transactions.id</code>, <code>productId</code> -&gt; <code>products.id</code></li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;txi-001-abc&quot;,
+  &quot;transactionId&quot;: &quot;TRX-20260917-0001&quot;,
+  &quot;productId&quot;: &quot;prd-550e8400-e29b-41d4-a716-446655440000&quot;,
+  &quot;productName&quot;: &quot;Aqua Air Mineral 600ml&quot;,
+  &quot;sku&quot;: &quot;MIN-AQUA-600&quot;,
+  &quot;unit&quot;: &quot;Botol&quot;,
+  &quot;buyPrice&quot;: 2500,
+  &quot;sellPrice&quot;: 3500,
+  &quot;quantity&quot;: 2,
+  &quot;discount&quot;: 0,
+  &quot;subtotal&quot;: 7000,
+  &quot;notes&quot;: &quot;Dingin&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.transactionItems.where(&#39;transactionId&#39;).equals(trxId).toArray()</code></li>
+<li><strong>Risiko Teknis:</strong> Menggunakan harga master produk saat ini alih-alih mengunci <code>buyPrice</code> dan <code>sellPrice</code> historis.</li>
+<li><strong>Catatan Migrasi:</strong> Nilai HPP (<code>buyPrice</code>) wajib disimpan beku saat transaksi dibuat agar laporan laba rugi historis tidak berubah ketika harga kulakan baru naik.</li>
+</ul>
+<hr>
+<h3 id="tabel-9-payments">Tabel 9: <code>payments</code><a class="header-anchor" href="#tabel-9-payments" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Mencatat rincian eksekusi pembayaran transaksi (termasuk split payment).</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>transactionId</code>: <code>string</code></li>
+<li><code>method</code>: <code>&#39;TUNAI&#39; | &#39;QRIS&#39; | &#39;TRANSFER&#39; | &#39;KASBON&#39;</code></li>
+<li><code>amount</code>: <code>number</code></li>
+<li><code>referenceNumber</code>: <code>string | null</code> (Nomor ref transfer/QRIS)</li>
+<li><code>status</code>: <code>&#39;SUCCESS&#39; | &#39;PENDING&#39; | &#39;FAILED&#39;</code></li>
+<li><code>date</code>: <code>string</code> (ISO-8601)</li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, transactionId, method, status, date</code></li>
+<li><strong>Virtual Foreign Key:</strong> <code>transactionId</code> -&gt; <code>transactions.id</code></li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;pay-12345&quot;,
+  &quot;transactionId&quot;: &quot;TRX-20260917-0001&quot;,
+  &quot;method&quot;: &quot;TUNAI&quot;,
+  &quot;amount&quot;: 45000,
+  &quot;referenceNumber&quot;: null,
+  &quot;status&quot;: &quot;SUCCESS&quot;,
+  &quot;date&quot;: &quot;2026-09-17T10:15:30.000Z&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.payments.where(&#39;transactionId&#39;).equals(trxId).toArray()</code></li>
+<li><strong>Risiko Teknis:</strong> Jumlah total pembayaran dalam tabel <code>payments</code> tidak cocok dengan total pada tabel <code>transactions</code>.</li>
+<li><strong>Catatan Migrasi:</strong> Disiapkan untuk mengakomodasi fitur split payment pada V2.</li>
+</ul>
+<hr>
+<h3 id="tabel-10-stocklogs">Tabel 10: <code>stockLogs</code><a class="header-anchor" href="#tabel-10-stocklogs" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Buku besar pergerakan inventori (<em>Immutable Inventory Movement Ledger</em>).</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>productId</code>: <code>string</code></li>
+<li><code>productName</code>: <code>string</code></li>
+<li><code>type</code>: <code>&#39;SALE&#39; | &#39;VOID&#39; | &#39;RETURN&#39; | &#39;RESTOCK&#39; | &#39;ADJUSTMENT&#39; | &#39;INITIAL_STOCK&#39; | &#39;STOCK_OPNAME&#39;</code></li>
+<li><code>quantity</code>: <code>number</code> (Nilai mutasi: negatif untuk keluar, positif untuk masuk)</li>
+<li><code>previousStock</code>: <code>number</code></li>
+<li><code>currentStock</code>: <code>number</code></li>
+<li><code>notes</code>: <code>string</code></li>
+<li><code>referenceId</code>: <code>string | null</code> (Nomor TRX atau ID PO)</li>
+<li><code>userId</code>: <code>string</code></li>
+<li><code>date</code>: <code>string</code> (ISO-8601)</li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, productId, type, date</code></li>
+<li><strong>Virtual Foreign Key:</strong> <code>productId</code> -&gt; <code>products.id</code>, <code>userId</code> -&gt; <code>users.id</code></li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;stk-log-999&quot;,
+  &quot;productId&quot;: &quot;prd-550e8400-e29b-41d4-a716-446655440000&quot;,
+  &quot;productName&quot;: &quot;Aqua Air Mineral 600ml&quot;,
+  &quot;type&quot;: &quot;SALE&quot;,
+  &quot;quantity&quot;: -2,
+  &quot;previousStock&quot;: 50,
+  &quot;currentStock&quot;: 48,
+  &quot;notes&quot;: &quot;Penjualan Faktur TRX-20260917-0001&quot;,
+  &quot;referenceId&quot;: &quot;TRX-20260917-0001&quot;,
+  &quot;userId&quot;: &quot;usr-kasir-1&quot;,
+  &quot;date&quot;: &quot;2026-09-17T10:15:30.000Z&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.stockLogs.where(&#39;productId&#39;).equals(prodId).reverse().sortBy(&#39;date&#39;)</code></li>
+<li><strong>Risiko Teknis:</strong> Race condition saat dua tab melakukan penulisan stok bersamaan jika tidak dibungkus transaksi Dexie <code>db.transaction(&#39;rw&#39;, ...)</code>.</li>
+<li><strong>Catatan Migrasi:</strong> Tabel paling kritis; dilarang keras mengizinkan operasi <code>delete</code> atau <code>update</code> pada baris di tabel ini.</li>
+</ul>
+<hr>
+<h3 id="tabel-11-suppliers">Tabel 11: <code>suppliers</code><a class="header-anchor" href="#tabel-11-suppliers" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Data pemasok barang dagangan / kulakan toko.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>name</code>: <code>string</code></li>
+<li><code>phone</code>: <code>string</code></li>
+<li><code>address</code>: <code>string | null</code></li>
+<li><code>contactPerson</code>: <code>string | null</code></li>
+<li><code>createdAt</code>: <code>string</code> (ISO-8601)</li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, name, phone</code></li>
+<li><strong>Virtual Foreign Key:</strong> Tidak ada</li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;sup-agen-sembako-makmur&quot;,
+  &quot;name&quot;: &quot;Agen Sembako Makmur Jaya&quot;,
+  &quot;phone&quot;: &quot;081987654321&quot;,
+  &quot;address&quot;: &quot;Pasar Induk Kramat Jati Kios 12&quot;,
+  &quot;contactPerson&quot;: &quot;Ko Asep&quot;,
+  &quot;createdAt&quot;: &quot;2026-01-01T08:00:00.000Z&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.suppliers.orderBy(&#39;name&#39;).toArray()</code></li>
+<li><strong>Risiko Teknis:</strong> Data duplikat nama supplier dengan format penulisan berbeda.</li>
+<li><strong>Catatan Migrasi:</strong> Diperkenalkan untuk mendukung fitur restock terstruktur pada V1b/V2.</li>
+</ul>
+<hr>
+<h3 id="tabel-12-purchases">Tabel 12: <code>purchases</code><a class="header-anchor" href="#tabel-12-purchases" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Mencatat faktur belanja barang masuk / kulakan dari supplier atau pasar tradisional.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>invoiceNumber</code>: <code>string</code></li>
+<li><code>supplierId</code>: <code>string | null</code></li>
+<li><code>totalCost</code>: <code>number</code></li>
+<li><code>date</code>: <code>string</code> (ISO-8601)</li>
+<li><code>status</code>: <code>&#39;RECEIVED&#39; | &#39;DRAFT&#39; | &#39;CANCELLED&#39;</code></li>
+<li><code>source</code>: <code>&#39;MANUAL&#39; | &#39;AI_OCR_NOTA&#39;</code></li>
+<li><code>notaImageUrl</code>: <code>string | null</code></li>
+<li><code>notes</code>: <code>string | null</code></li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, invoiceNumber, supplierId, date, status</code></li>
+<li><strong>Virtual Foreign Key:</strong> <code>supplierId</code> -&gt; <code>suppliers.id</code></li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;po-20260917-001&quot;,
+  &quot;invoiceNumber&quot;: &quot;NOTA-PSR-88&quot;,
+  &quot;supplierId&quot;: &quot;sup-agen-sembako-makmur&quot;,
+  &quot;totalCost&quot;: 450000,
+  &quot;date&quot;: &quot;2026-09-17T06:30:00.000Z&quot;,
+  &quot;status&quot;: &quot;RECEIVED&quot;,
+  &quot;source&quot;: &quot;AI_OCR_NOTA&quot;,
+  &quot;notaImageUrl&quot;: null,
+  &quot;notes&quot;: &quot;Belanja sayur dan beras di pasar induk&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.purchases.where(&#39;status&#39;).equals(&#39;RECEIVED&#39;).toArray()</code></li>
+<li><strong>Risiko Teknis:</strong> Penerimaan barang yang dibatalkan tanpa memotong kembali stok yang sudah masuk.</li>
+<li><strong>Catatan Migrasi:</strong> Field <code>source</code> membedakan kulakan manual dan hasil ekstraksi OCR Gemini AI.</li>
+</ul>
+<hr>
+<h3 id="tabel-13-purchaseitems">Tabel 13: <code>purchaseItems</code><a class="header-anchor" href="#tabel-13-purchaseitems" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Rincian baris barang yang dibeli pada setiap faktur pembelian.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>purchaseId</code>: <code>string</code></li>
+<li><code>productId</code>: <code>string</code></li>
+<li><code>quantity</code>: <code>number</code></li>
+<li><code>buyPrice</code>: <code>number</code> (HPP baru yang disepakati)</li>
+<li><code>subtotal</code>: <code>number</code></li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, purchaseId, productId</code></li>
+<li><strong>Virtual Foreign Key:</strong> <code>purchaseId</code> -&gt; <code>purchases.id</code>, <code>productId</code> -&gt; <code>products.id</code></li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;poi-001&quot;,
+  &quot;purchaseId&quot;: &quot;po-20260917-001&quot;,
+  &quot;productId&quot;: &quot;prd-550e8400-e29b-41d4-a716-446655440000&quot;,
+  &quot;quantity&quot;: 24,
+  &quot;buyPrice&quot;: 2400,
+  &quot;subtotal&quot;: 57600
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.purchaseItems.where(&#39;purchaseId&#39;).equals(poId).toArray()</code></li>
+<li><strong>Risiko Teknis:</strong> Pembaruan HPP pada master produk tidak memperhitungkan rata-rata tertimbang (<em>Moving Average Cost</em>).</li>
+<li><strong>Catatan Migrasi:</strong> Terintegrasi dengan review modal AI OCR nota belanja.</li>
+</ul>
+<hr>
+<h3 id="tabel-14-customers">Tabel 14: <code>customers</code><a class="header-anchor" href="#tabel-14-customers" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Direktori pelanggan toko beserta ringkasan saldo kasbon aktif.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>name</code>: <code>string</code></li>
+<li><code>phone</code>: <code>string</code></li>
+<li><code>address</code>: <code>string | null</code></li>
+<li><code>totalDebt</code>: <code>number</code> (Total saldo piutang yang belum lunas)</li>
+<li><code>maxDebtLimit</code>: <code>number</code> (Batas plafon kasbon maksimal)</li>
+<li><code>createdAt</code>: <code>string</code> (ISO-8601)</li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, name, phone, totalDebt</code></li>
+<li><strong>Virtual Foreign Key:</strong> Tidak ada</li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;cst-pak-rt-bambang&quot;,
+  &quot;name&quot;: &quot;Pak RT Bambang&quot;,
+  &quot;phone&quot;: &quot;081122334455&quot;,
+  &quot;address&quot;: &quot;Rumah No. 12 RT 03/05&quot;,
+  &quot;totalDebt&quot;: 75000,
+  &quot;maxDebtLimit&quot;: 200000,
+  &quot;createdAt&quot;: &quot;2026-01-01T08:00:00.000Z&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.customers.where(&#39;totalDebt&#39;).above(0).toArray()</code></li>
+<li><strong>Risiko Teknis:</strong> Saldo <code>totalDebt</code> mengalami desinkronisasi jika pembayaran tidak dicatat dalam transaksi atomik dengan tabel <code>debtPayments</code>.</li>
+<li><strong>Catatan Migrasi:</strong> Indeks pada <code>totalDebt</code> memungkinkan filter cepat pelanggan yang memiliki tagihan belum lunas.</li>
+</ul>
+<hr>
+<h3 id="tabel-15-customerdebts">Tabel 15: <code>customerDebts</code><a class="header-anchor" href="#tabel-15-customerdebts" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Rekam faktur spesifik yang berstatus kasbon (piutang toko).</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>customerId</code>: <code>string</code></li>
+<li><code>transactionId</code>: <code>string</code></li>
+<li><code>amount</code>: <code>number</code> (Nilai pokok kasbon)</li>
+<li><code>remainingAmount</code>: <code>number</code> (Sisa saldo yang belum dicicil)</li>
+<li><code>status</code>: <code>&#39;UNPAID&#39; | &#39;PARTIAL&#39; | &#39;PAID&#39;</code></li>
+<li><code>dueDate</code>: <code>string | null</code> (Jatuh tempo pembayaran)</li>
+<li><code>createdAt</code>: <code>string</code> (ISO-8601)</li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, customerId, transactionId, status, dueDate</code></li>
+<li><strong>Virtual Foreign Key:</strong> <code>customerId</code> -&gt; <code>customers.id</code>, <code>transactionId</code> -&gt; <code>transactions.id</code></li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;dbt-20260917-01&quot;,
+  &quot;customerId&quot;: &quot;cst-pak-rt-bambang&quot;,
+  &quot;transactionId&quot;: &quot;TRX-20260917-0044&quot;,
+  &quot;amount&quot;: 75000,
+  &quot;remainingAmount&quot;: 75000,
+  &quot;status&quot;: &quot;UNPAID&quot;,
+  &quot;dueDate&quot;: &quot;2026-09-30T00:00:00.000Z&quot;,
+  &quot;createdAt&quot;: &quot;2026-09-17T11:00:00.000Z&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.customerDebts.where(&#39;customerId&#39;).equals(custId).and(d =&gt; d.status !== &#39;PAID&#39;).toArray()</code></li>
+<li><strong>Risiko Teknis:</strong> Kasbon ganda tercatat jika kasir mengulang checkout saat koneksi lokal lambat.</li>
+<li><strong>Catatan Migrasi:</strong> Membantu toko menyusun buku piutang per faktur transaksi.</li>
+</ul>
+<hr>
+<h3 id="tabel-16-debtpayments">Tabel 16: <code>debtPayments</code><a class="header-anchor" href="#tabel-16-debtpayments" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Log pembayaran pelunasan atau cicilan kasbon oleh pelanggan.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>customerId</code>: <code>string</code></li>
+<li><code>debtId</code>: <code>string | null</code> (Bisa null jika bayar saldo umum)</li>
+<li><code>amountPaid</code>: <code>number</code></li>
+<li><code>paymentMethod</code>: <code>&#39;TUNAI&#39; | &#39;TRANSFER&#39; | &#39;QRIS&#39;</code></li>
+<li><code>cashierName</code>: <code>string</code></li>
+<li><code>notes</code>: <code>string | null</code></li>
+<li><code>date</code>: <code>string</code> (ISO-8601)</li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, customerId, debtId, date</code></li>
+<li><strong>Virtual Foreign Key:</strong> <code>customerId</code> -&gt; <code>customers.id</code>, <code>debtId</code> -&gt; <code>customerDebts.id</code></li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;pay-dbt-001&quot;,
+  &quot;customerId&quot;: &quot;cst-pak-rt-bambang&quot;,
+  &quot;debtId&quot;: &quot;dbt-20260917-01&quot;,
+  &quot;amountPaid&quot;: 50000,
+  &quot;paymentMethod&quot;: &quot;TUNAI&quot;,
+  &quot;cashierName&quot;: &quot;Siti Aminah&quot;,
+  &quot;notes&quot;: &quot;Titip uang kembalian belanja&quot;,
+  &quot;date&quot;: &quot;2026-09-18T09:00:00.000Z&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.debtPayments.where(&#39;customerId&#39;).equals(custId).reverse().sortBy(&#39;date&#39;)</code></li>
+<li><strong>Risiko Teknis:</strong> Penerimaan uang tunai kasbon lupa dimasukkan ke laci kas shift yang aktif.</li>
+<li><strong>Catatan Migrasi:</strong> Menjamin riwayat pembayaran kasbon dapat dilacak per tanggal dan per kasir.</li>
+</ul>
+<hr>
+<h3 id="tabel-17-suspendedcarts">Tabel 17: <code>suspendedCarts</code><a class="header-anchor" href="#tabel-17-suspendedcarts" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Menyimpan antrean transaksi belanja yang ditahan/digantung (<em>Hold Orders</em>).</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>label</code>: <code>string</code> (Contoh: &quot;Meja 4&quot;, &quot;Budi Antre Rokok&quot;)</li>
+<li><code>items</code>: <code>CartItem[]</code> (Array terstruktur item belanja)</li>
+<li><code>cartOrderDiscount</code>: <code>number</code></li>
+<li><code>selectedCustomer</code>: <code>Customer | null</code></li>
+<li><code>notes</code>: <code>string | null</code></li>
+<li><code>createdAt</code>: <code>string</code> (ISO-8601)</li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, label, createdAt</code></li>
+<li><strong>Virtual Foreign Key:</strong> Tidak ada (Data transaksi sementara)</li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;hld-777&quot;,
+  &quot;label&quot;: &quot;Meja 03 (Es Kopi &amp; Roti)&quot;,
+  &quot;items&quot;: [
+    {
+      &quot;product&quot;: { &quot;id&quot;: &quot;prd-1&quot;, &quot;name&quot;: &quot;Es Kopi Susu&quot;, &quot;sellPrice&quot;: 18000 },
+      &quot;quantity&quot;: 2,
+      &quot;discount&quot;: 0,
+      &quot;discountType&quot;: &quot;NOMINAL&quot;,
+      &quot;notes&quot;: &quot;Sedikit Gula&quot;
+    }
+  ],
+  &quot;cartOrderDiscount&quot;: 0,
+  &quot;selectedCustomer&quot;: null,
+  &quot;notes&quot;: &quot;Pelanggan menunggu teman&quot;,
+  &quot;createdAt&quot;: &quot;2026-09-17T10:00:00.000Z&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.suspendedCarts.orderBy(&#39;createdAt&#39;).toArray()</code></li>
+<li><strong>Risiko Teknis:</strong> Penumpukan cart gantung yang ditinggalkan pembeli tanpa pernah dibatalkan.</li>
+<li><strong>Catatan Migrasi:</strong> Memberikan fitur <em>Hold and Recall</em> antrean tanpa batas waktu kedaluwarsa lokal.</li>
+</ul>
+<hr>
+<h3 id="tabel-18-cashsessions">Tabel 18: <code>cashSessions</code><a class="header-anchor" href="#tabel-18-cashsessions" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Rekonsiliasi sesi kerja kasir, modal awal laci kas, kas masuk/keluar, dan selisih kas.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>cashierId</code>: <code>string</code></li>
+<li><code>cashierName</code>: <code>string</code></li>
+<li><code>startTime</code>: <code>string</code> (ISO-8601)</li>
+<li><code>endTime</code>: <code>string | null</code></li>
+<li><code>initialCash</code>: <code>number</code> (Modal Awal Pecahan Kecil)</li>
+<li><code>expectedCash</code>: <code>number | null</code> (Hitungan Sistem: Modal + Penjualan Tunai + Kas Masuk - Kas Keluar)</li>
+<li><code>finalCash</code>: <code>number | null</code> (Hitungan Fisik Uang Kasir / Blind Count)</li>
+<li><code>variance</code>: <code>number | null</code> (<code>finalCash - expectedCash</code>)</li>
+<li><code>status</code>: <code>&#39;OPEN&#39; | &#39;CLOSED&#39;</code></li>
+<li><code>notes</code>: <code>string | null</code></li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, cashierId, status, startTime</code></li>
+<li><strong>Virtual Foreign Key:</strong> <code>cashierId</code> -&gt; <code>users.id</code></li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;shf-20260917-pagi&quot;,
+  &quot;cashierId&quot;: &quot;usr-kasir-1&quot;,
+  &quot;cashierName&quot;: &quot;Siti Aminah&quot;,
+  &quot;startTime&quot;: &quot;2026-09-17T07:00:00.000Z&quot;,
+  &quot;endTime&quot;: &quot;2026-09-17T15:00:00.000Z&quot;,
+  &quot;initialCash&quot;: 200000,
+  &quot;expectedCash&quot;: 1450000,
+  &quot;finalCash&quot;: 1450000,
+  &quot;variance&quot;: 0,
+  &quot;status&quot;: &quot;CLOSED&quot;,
+  &quot;notes&quot;: &quot;Shift pagi lancar, uang pas.&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.cashSessions.where(&#39;status&#39;).equals(&#39;OPEN&#39;).first()</code></li>
+<li><strong>Risiko Teknis:</strong> Kasir menutup shift tanpa menghitung fisik laci (<em>blind cash count</em>), memicu potensi selisih fiktif.</li>
+<li><strong>Catatan Migrasi:</strong> Mencegah transaksi kasir dilakukan sebelum shift dibuka secara eksplisit.</li>
+</ul>
+<hr>
+<h3 id="tabel-19-auditlogs">Tabel 19: <code>auditLogs</code><a class="header-anchor" href="#tabel-19-auditlogs" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Jejak audit forensik yang <em>immutable</em> atas seluruh aksi sensitif di aplikasi.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>timestamp</code>: <code>string</code> (ISO-8601)</li>
+<li><code>type</code>: <code>&#39;VOID&#39; | &#39;MANUAL_DISCOUNT&#39; | &#39;DRAWER_OPEN&#39; | &#39;STOCK_OVERRIDE&#39; | &#39;SETTINGS_CHANGE&#39; | &#39;BACKUP_RESTORE&#39;</code></li>
+<li><code>severity</code>: <code>&#39;INFO&#39; | &#39;WARN&#39; | &#39;CRITICAL&#39;</code></li>
+<li><code>cashierName</code>: <code>string</code></li>
+<li><code>details</code>: <code>string</code></li>
+<li><code>amount</code>: <code>number | null</code></li>
+<li><code>relatedTransactionId</code>: <code>string | null</code></li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, timestamp, type, cashierName</code></li>
+<li><strong>Virtual Foreign Key:</strong> <code>relatedTransactionId</code> -&gt; <code>transactions.id</code></li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;adt-987654&quot;,
+  &quot;timestamp&quot;: &quot;2026-09-17T10:45:12.000Z&quot;,
+  &quot;type&quot;: &quot;VOID&quot;,
+  &quot;severity&quot;: &quot;CRITICAL&quot;,
+  &quot;cashierName&quot;: &quot;Budi (Authorized by PIN Owner)&quot;,
+  &quot;details&quot;: &quot;Void transaksi TRX-20260917-0005 karena pembeli salah ambil barang&quot;,
+  &quot;amount&quot;: 85000,
+  &quot;relatedTransactionId&quot;: &quot;TRX-20260917-0005&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.auditLogs.orderBy(&#39;timestamp&#39;).reverse().limit(100).toArray()</code></li>
+<li><strong>Risiko Teknis:</strong> File log membengkak jika tidak ada kebijakan retensi data lokal setelah pencadangan.</li>
+<li><strong>Catatan Migrasi:</strong> Akses penghapusan log audit ditutup sepenuhnya pada UI Kasirio.</li>
+</ul>
+<hr>
+<h3 id="tabel-20-appsettings">Tabel 20: <code>appSettings</code><a class="header-anchor" href="#tabel-20-appsettings" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Pengaturan global aplikasi, preferensi hardware, dan parameter perpajakan.</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (Nilai tetap: <code>&#39;singleton_settings&#39;</code>, PK)</li>
+<li><code>data</code>: <code>StoreSettings</code> (Objek konfigurasi lengkap)</li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id</code></li>
+<li><strong>Virtual Foreign Key:</strong> Tidak ada</li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;singleton_settings&quot;,
+  &quot;data&quot;: {
+    &quot;storeName&quot;: &quot;Warung Berkah UMKM&quot;,
+    &quot;businessType&quot;: &quot;RETAIL&quot;,
+    &quot;address&quot;: &quot;Jl. Mawar No. 10&quot;,
+    &quot;phone&quot;: &quot;08123456789&quot;,
+    &quot;receiptHeaderNote&quot;: &quot;Terima kasih atas kunjungan Anda&quot;,
+    &quot;receiptFooterNote&quot;: &quot;Simpan struk ini sebagai bukti bayar&quot;,
+    &quot;paperSize&quot;: &quot;58mm&quot;,
+    &quot;taxPercentage&quot;: 11,
+    &quot;enableTax&quot;: false,
+    &quot;taxLabel&quot;: &quot;PPN&quot;,
+    &quot;logoUrl&quot;: null,
+    &quot;qrisMerchantName&quot;: &quot;WARUNG BERKAH&quot;,
+    &quot;bankAccountInfo&quot;: &quot;BCA 1234567890 a.n. Budi&quot;,
+    &quot;soundboxEnabled&quot;: true
+  }
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.appSettings.get(&#39;singleton_settings&#39;)</code></li>
+<li><strong>Risiko Teknis:</strong> Kerusakan JSON data pengaturan dapat membuat app shell crash saat inisialisasi awal.</li>
+<li><strong>Catatan Migrasi:</strong> Menggunakan nilai fallback standar jika row belum terbentuk saat instalasi baru.</li>
+</ul>
+<hr>
+<h3 id="tabel-21-billingplans-amp-koinledger">Tabel 21: <code>billingPlans</code> &amp; <code>koinLedger</code><a class="header-anchor" href="#tabel-21-billingplans-amp-koinledger" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Tujuan:</strong> Pengelolaan hak akses fitur Pro toko melalui model Koin Kasirio (<em>Closed-Loop Service Token</em>).</li>
+<li><strong>Kolom &amp; Tipe Data:</strong><ul>
+<li><code>id</code>: <code>string</code> (UUID v4, PK)</li>
+<li><code>storeId</code>: <code>string</code></li>
+<li><code>type</code>: <code>&#39;TOPUP&#39; | &#39;MONTHLY_PRO_DEDUCT&#39; | &#39;BONUS&#39;</code></li>
+<li><code>amountKoin</code>: <code>number</code></li>
+<li><code>rupiahEquivalent</code>: <code>number</code></li>
+<li><code>description</code>: <code>string</code></li>
+<li><code>date</code>: <code>string</code> (ISO-8601)</li>
+</ul>
+</li>
+<li><strong>Index:</strong> <code>id, storeId, type, date</code></li>
+<li><strong>Virtual Foreign Key:</strong> <code>storeId</code> -&gt; <code>stores.id</code></li>
+<li><strong>Contoh Data (JSON):</strong><pre><code class="language-json">{
+  &quot;id&quot;: &quot;kin-001&quot;,
+  &quot;storeId&quot;: &quot;str-98a7b6c5-d4e3-4f2a-1b0c-9d8e7f6a5b4c&quot;,
+  &quot;type&quot;: &quot;MONTHLY_PRO_DEDUCT&quot;,
+  &quot;amountKoin&quot;: -50,
+  &quot;rupiahEquivalent&quot;: 50000,
+  &quot;description&quot;: &quot;Perpanjangan Paket Kasirio Pro (30 Hari)&quot;,
+  &quot;date&quot;: &quot;2026-09-01T00:00:00.000Z&quot;
+}
+</code></pre>
+</li>
+<li><strong>Query Umum:</strong> <code>db.koinLedger.orderBy(&#39;date&#39;).reverse().toArray()</code></li>
+<li><strong>Risiko Teknis:</strong> Pemalsuan saldo koin jika file basis data lokal disunting manual oleh pengguna tingkat mahir (mitigasi: enkripsi checksum koin).</li>
+<li><strong>Catatan Migrasi:</strong> Menghindarkan Kasirio dari aturan penampungan dana pihak ketiga BI dan potongan toko aplikasi.</li>
+</ul>
+<hr>
+<h2 id="bab-13-entity-relationship-bible-erd">Bab 13 — Entity Relationship Bible (ERD)<a class="header-anchor" href="#bab-13-entity-relationship-bible-erd" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Diagram berikut memetakan relasi normalisasi antar entitas di dalam basis data lokal Dexie.js Kasirio:</p>
+<pre><code class="language-mermaid">erDiagram
+    stores ||--o{ users : &quot;memiliki&quot;
+    stores ||--o{ products : &quot;memiliki katalog&quot;
+    stores ||--o{ cashSessions : &quot;mengoperasikan&quot;
+    stores ||--o{ transactions : &quot;menerbitkan&quot;
+    
+    categories ||--o{ products : &quot;mengelompokkan&quot;
+    products ||--o{ productVariants : &quot;memiliki variasi&quot;
+    products ||--o{ stockLogs : &quot;pergerakan stok&quot;
+    products ||--o{ transactionItems : &quot;dijual dalam&quot;
+    products ||--o{ purchaseItems : &quot;dibeli dalam&quot;
+    
+    transactions ||--|{ transactionItems : &quot;memuat rincian&quot;
+    transactions ||--|{ payments : &quot;dibayar dengan&quot;
+    transactions ||--o| customerDebts : &quot;dapat menghasilkan&quot;
+    
+    customers ||--o{ transactions : &quot;berbelanja&quot;
+    customers ||--o{ customerDebts : &quot;memiliki hutang&quot;
+    customerDebts ||--o{ debtPayments : &quot;dicicil oleh&quot;
+    
+    suppliers ||--o{ purchases : &quot;memasok&quot;
+    purchases ||--|{ purchaseItems : &quot;memuat daftar barang&quot;
+    
+    users ||--o{ cashSessions : &quot;membuka shift&quot;
+    users ||--o{ auditLogs : &quot;melakukan aksi&quot;
+</code></pre>
+<hr>
+<h2 id="bab-14-kebijakan-migrasi-skema-basis-data">Bab 14 — Kebijakan Migrasi Skema Basis Data<a class="header-anchor" href="#bab-14-kebijakan-migrasi-skema-basis-data" title="Tautan langsung ke seksi ini">#</a></h2>
+<h3 id="141-aturan-versioning-skema-dexie">14.1 Aturan Versioning Skema Dexie<a class="header-anchor" href="#141-aturan-versioning-skema-dexie" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Setiap perubahan struktur tabel, penambahan indeks, atau transformasi tipe data wajib mengikuti aturan migrasi bertahap tanpa pernah menghapus database yang sudah berjalan:</p>
+<pre><code class="language-typescript">// Contoh upgrade migrasi terproteksi
+db.version(2).stores({
+  products: &#39;id, sku, barcode, categoryId, name, sellPrice, stock, deletedAt&#39;,
+  transactions: &#39;id, date, paymentMethod, status, cashierName, total, isAuditFlagged&#39;
+}).upgrade(tx =&gt; {
+  // Transformasi data historis tanpa data loss
+  return tx.table(&#39;products&#39;).toCollection().modify(product =&gt; {
+    if (product.deletedAt === undefined) product.deletedAt = null;
+    if (product.minStock === undefined) product.minStock = 5;
+  });
+});
+</code></pre>
+<h3 id="142-checklist-kebijakan-migrasi">14.2 Checklist Kebijakan Migrasi<a class="header-anchor" href="#142-checklist-kebijakan-migrasi" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><input disabled="" type="checkbox"> <strong>No Destructive Drops:</strong> Dilarang menghapus tabel atau kolom yang memuat riwayat transaksi keuangan.</li>
+<li><input disabled="" type="checkbox"> <strong>Transactional Atomicity:</strong> Migrasi wajib berjalan dalam scope transaksi Dexie; kegagalan pada satu baris data membatalkan seluruh migrasi (<em>auto-rollback</em>).</li>
+<li><input disabled="" type="checkbox"> <strong>Pre-Migration Auto Backup:</strong> Sistem secara otomatis memicu unduhan file <code>pre-migration-backup.json</code> sebelum skema versi baru dieksekusi oleh peramban pengguna.</li>
+</ul>
+<hr>
+<h2 id="bab-15-siklus-hidup-amp-retensi-data">Bab 15 — Siklus Hidup &amp; Retensi Data<a class="header-anchor" href="#bab-15-siklus-hidup-amp-retensi-data" title="Tautan langsung ke seksi ini">#</a></h2>
+<h3 id="151-pola-soft-delete-vs-hard-delete">15.1 Pola Soft-Delete vs Hard-Delete<a class="header-anchor" href="#151-pola-soft-delete-vs-hard-delete" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Produk &amp; Kategori:</strong> Menggunakan <strong>Soft-Delete</strong> (<code>deletedAt = ISO String</code>). Produk yang dihapus tetap ada di basis data untuk menjaga integritas riwayat penjualan faktur lama dan laporan laba rugi.</li>
+<li><strong>Transaksi &amp; Log Audit:</strong> <strong>Dilarang Keras Dihapus (Immutable Record)</strong>. Transaksi salah hanya bisa dibatalkan statusnya menjadi <code>BATAL</code> (Void), bukan dihapus dari tabel.</li>
+<li><strong>Suspended Carts:</strong> Diizinkan menggunakan <strong>Hard-Delete</strong> setelah keranjang berhasil di-checkout atau dibatalkan manual oleh kasir.</li>
+</ul>
+<h3 id="152-kebijakan-pengarsipan-archiving-policy">15.2 Kebijakan Pengarsipan (Archiving Policy)<a class="header-anchor" href="#152-kebijakan-pengarsipan-archiving-policy" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Data transaksi yang berusia lebih dari 2 (dua) tahun dapat diarsipkan ke dalam file zip terenkripsi lokal (<em>Local Cold Storage Export</em>) melalui modul Settings untuk menjaga performa rendering memori RAM peramban tetap gesit.</p>
+<hr>
+<h1 id="bagian-iv-pos-engine">BAGIAN IV — POS ENGINE<a class="header-anchor" href="#bagian-iv-pos-engine" title="Tautan langsung ke seksi ini">#</a></h1>
+<hr>
+<h2 id="bab-16-transaction-lifecycle-engine">Bab 16 — Transaction Lifecycle Engine<a class="header-anchor" href="#bab-16-transaction-lifecycle-engine" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Setiap transaksi di Kasirio melewati siklus hidup yang terdefinisi secara ketat guna memastikan konsistensi antara uang kas, catatan piutang, dan stok inventori:</p>
+<pre><code> [ DRAFT / IN-CART ]  ──( Kasir Input Barang / Barcode Scanner )
+         │
+         ├──► [ SUSPENDED ] ──( Gantung Antrean / Hold Cart )
+         │          │
+         │          └──► [ RECALLED ] ──( Ambil Kembali ke Keranjang )
+         ▼
+ [ CHECKOUT MODAL ]   ──( Pilih Metode: Tunai / QRIS / Transfer / Kasbon )
+         │
+         ├──► Validasi PIN (Jika ada diskon &gt; 10% atau harga custom)
+         ▼
+ [ COMMITTING ]       ──( Eksekusi Dexie Atomic Transaction )
+         │
+         ├── 1. Tulis Transaksi ke `transactions`
+         ├── 2. Tulis Item ke `transactionItems`
+         ├── 3. Tulis Pengurangan Stok ke `stockLogs` (SALE)
+         ├── 4. Update Saldo Kas di `cashSessions` (Jika Tunai)
+         ├── 5. Tulis Piutang ke `customerDebts` (Jika Kasbon)
+         ▼
+ [ COMPLETED ]        ──( Cetak Struk / Tampilkan Dynamic QR / Soundbox )
+</code></pre>
+<h3 id="161-aturan-komitmen-atomik-atomic-commit-rule">16.1 Aturan Komitmen Atomik (Atomic Commit Rule)<a class="header-anchor" href="#161-aturan-komitmen-atomik-atomic-commit-rule" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Semua langkah pada fase <code>COMMITTING</code> wajib dibungkus dalam satu blok transaksi baca-tulis Dexie:</p>
+<pre><code class="language-typescript">await db.transaction(&#39;rw&#39;, [db.transactions, db.transactionItems, db.stockLogs, db.products, db.cashSessions], async () =&gt; {
+  // Seluruh penulisan dieksekusi di sini.
+  // Jika daya listrik mati di tengah proses, IndexedDB otomatis rollback 100%.
+});
+</code></pre>
+<hr>
+<h2 id="bab-17-cart-engine-amp-antrean-transaksi">Bab 17 — Cart Engine &amp; Antrean Transaksi<a class="header-anchor" href="#bab-17-cart-engine-amp-antrean-transaksi" title="Tautan langsung ke seksi ini">#</a></h2>
+<h3 id="171-manajemen-mutasi-keranjang">17.1 Manajemen Mutasi Keranjang<a class="header-anchor" href="#171-manajemen-mutasi-keranjang" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Komponen keranjang mengelola kalkulasi waktu nyata (<em>real-time calculation</em>) dengan hierarki berikut:</p>
+<p>$$\text{Subtotal Baris} = (\text{Harga Jual} + \text{Varian Modifier}) \times \text{Kuantitas} - \text{Diskon Item}$$</p>
+<p>$$\text{Subtotal Order} = \sum \text{Subtotal Baris}$$</p>
+<p>$$\text{Total Akhir} = \text{Subtotal Order} - \text{Diskon Order} + \text{Pajak} + \text{Biaya Layanan}$$</p>
+<h3 id="172-pola-hold-amp-recall-antrean">17.2 Pola Hold &amp; Recall Antrean<a class="header-anchor" href="#172-pola-hold-amp-recall-antrean" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li>Kasir dapat menahan keranjang belanja pelanggan aktif (<em>Hold Cart</em>) dengan memberi label identifikasi (misal: &quot;Ibu Baju Merah&quot; atau &quot;Meja 07&quot;).</li>
+<li>Keranjang yang ditahan disimpan ke tabel <code>suspendedCarts</code> di IndexedDB.</li>
+<li>Membuka kembali pesanan (<em>Recall Cart</em>) memuat ulang seluruh baris barang, pilihan varian, catatan item, serta diskon yang sebelumnya telah diinput tanpa kehilangan data.</li>
+</ul>
+<hr>
+<h2 id="bab-18-payment-engine">Bab 18 — Payment Engine<a class="header-anchor" href="#bab-18-payment-engine" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Kasirio mendukung multi-metode pembayaran yang disesuaikan dengan lanskap UMKM Indonesia:</p>
+<pre><code>┌────────────────────────────────────────────────────────────────────────┐
+│                        PAYMENT ENGINE DISPATCHER                       │
+├─────────────────┬──────────────────┬─────────────────┬─────────────────┤
+│ 1. TUNAI        │ 2. QRIS (STATIS/ │ 3. TRANSFER     │ 4. KASBON       │
+│    (CASH)       │    DINAMIS)      │    BANK         │    (DEBT)       │
+├─────────────────┼──────────────────┼─────────────────┼─────────────────┤
+│ Tombol Uang Pas,│ Generate Payload │ Tampilkan Info  │ Cek Limit Bon,  │
+│ Hitung Kembalian│ QRIS Standar     │ Rekening Toko,  │ Tambah Saldo    │
+│ Instan          │ Bank Indonesia   │ Verifikasi Manual│ Piutang Pelanggan│
+└─────────────────┴──────────────────┴─────────────────┴─────────────────┘
+</code></pre>
+<h3 id="181-fitur-uang-pas-amp-quick-chips-kembalian">18.1 Fitur Uang Pas &amp; Quick Chips Kembalian<a class="header-anchor" href="#181-fitur-uang-pas-amp-quick-chips-kembalian" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Antarmuka modal pembayaran tunai menyediakan tombol cepat pecahan nominal mata uang Rupiah (<code>Rp 10.000</code>, <code>Rp 20.000</code>, <code>Rp 50.000</code>, <code>Rp 100.000</code>, serta <code>Uang Pas</code>). Perhitungan uang kembalian dieksekusi instan tanpa tombol &quot;Hitung&quot;.</p>
+<hr>
+<h2 id="bab-19-receipt-engine-dual-mode-thermal-amp-dynamic-qr">Bab 19 — Receipt Engine (Dual-Mode Thermal &amp; Dynamic QR)<a class="header-anchor" href="#bab-19-receipt-engine-dual-mode-thermal-amp-dynamic-qr" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Salah satu inovasi arsitektur terpenting Kasirio adalah <strong>Dual-Mode Receipt System</strong>:</p>
+<pre><code>                                [ CHECKOUT LUNAS ]
+                                        │
+                    ┌───────────────────┴───────────────────┐
+                    ▼                                       ▼
+        [ MODE FISIK: THERMAL ]                 [ MODE DIGITAL: OFFLINE QR ]
+        - ESC/POS Driver over USB/BT            - Render QR Code di Layar Kasir
+        - CSS @media print 58mm / 80mm          - Pembeli scan langsung via HP
+        - Zero Browser Header/Footer URL        - Payload JSON terkompresi tanpa internet
+</code></pre>
+<h3 id="191-spesifikasi-payload-dynamic-qr-struk-offline">19.1 Spesifikasi Payload Dynamic QR Struk Offline<a class="header-anchor" href="#191-spesifikasi-payload-dynamic-qr-struk-offline" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Untuk menghemat kertas thermal, Kasirio mengompresi detail struk ke dalam format JSON mikro yang di-encode ke URL data Base64:</p>
+<pre><code class="language-json">{
+  &quot;v&quot;: 1,
+  &quot;t&quot;: &quot;TRX-20260917-001&quot;,
+  &quot;d&quot;: &quot;2026-09-17T10:15&quot;,
+  &quot;s&quot;: &quot;Warung Berkah&quot;,
+  &quot;tot&quot;: 45000,
+  &quot;i&quot;: [[&quot;MIN-AQUA&quot;, 2, 3500], [&quot;BERAS-5KG&quot;, 1, 38000]]
+}
+</code></pre>
+<p>Ketika pembeli memindai kode QR tersebut dengan kamera HP, browser pembeli akan membuka viewer struk digital statis yang bersih tanpa memerlukan koneksi ke database pusat.</p>
+<hr>
+<h2 id="bab-20-barcode-engine-amp-low-latency-hardware-buffer">Bab 20 — Barcode Engine &amp; Low-Latency Hardware Buffer<a class="header-anchor" href="#bab-20-barcode-engine-amp-low-latency-hardware-buffer" title="Tautan langsung ke seksi ini">#</a></h2>
+<h3 id="201-algoritma-hardware-barcode-buffer">20.1 Algoritma Hardware Barcode Buffer<a class="header-anchor" href="#201-algoritma-hardware-barcode-buffer" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Scanner barcode fisik (USB HID atau Bluetooth HID) mengirimkan karakter hasil pindai layaknya ketikan keyboard komputer dengan kecepatan sangat tinggi. Jika pendengar keyboard (<em>keydown listener</em>) dipasang tanpa filter waktu, ketikan manual kasir akan tertukar dengan hasil scan barcode.</p>
+<pre><code class="language-typescript">// Implementasi Logika Filter Barcode Buffer Kasirio
+const BARCODE_THRESHOLD_MS = 50; // Jeda maksimum antar karakter scanner
+let barcodeBuffer = &#39;&#39;;
+let lastKeyTimestamp = 0;
+
+window.addEventListener(&#39;keydown&#39;, (e: KeyboardEvent) =&gt; {
+  const currentTime = performance.now();
+  const timeDiff = currentTime - lastKeyTimestamp;
+  lastKeyTimestamp = currentTime;
+
+  if (e.key === &#39;Enter&#39;) {
+    if (barcodeBuffer.length &gt;= 3 &amp;&amp; timeDiff &lt; BARCODE_THRESHOLD_MS) {
+      e.preventDefault();
+      handleBarcodeScanned(barcodeBuffer.trim());
+      barcodeBuffer = &#39;&#39;;
+      return;
+    }
+    barcodeBuffer = &#39;&#39;;
+    return;
+  }
+
+  // Jika jeda ketikan terlalu lambat (&gt;50ms), reset buffer (ketikan manual manusia)
+  if (timeDiff &gt; BARCODE_THRESHOLD_MS) {
+    barcodeBuffer = &#39;&#39;;
+  }
+
+  if (e.key.length === 1) {
+    barcodeBuffer += e.key;
+  }
+});
+</code></pre>
+<hr>
+<h1 id="bagian-v-inventory-engine">BAGIAN V — INVENTORY ENGINE<a class="header-anchor" href="#bagian-v-inventory-engine" title="Tautan langsung ke seksi ini">#</a></h1>
+<hr>
+<h2 id="bab-21-arsitektur-produk-amp-master-data">Bab 21 — Arsitektur Produk &amp; Master Data<a class="header-anchor" href="#bab-21-arsitektur-produk-amp-master-data" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Katalog barang Kasirio dirancang untuk menangani variasi SKU tinggi dengan indeks memori yang ringan.</p>
+<h3 id="211-aturan-penomoran-sku-amp-barcode">21.1 Aturan Penomoran SKU &amp; Barcode<a class="header-anchor" href="#211-aturan-penomoran-sku-amp-barcode" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li>Jika barang memiliki barcode pabrik (EAN-13, UPC, Code 128), kode tersebut dicatat pada kolom <code>barcode</code>.</li>
+<li>Jika produk tidak memiliki barcode fisik (contoh: makanan olahan, sayur curah), sistem menyediakan tombol autogenerate SKU unik berformat: <code>KSR-[KATEGORI]-[RANDOM_ALPHANUMERIC]</code>.</li>
+</ul>
+<hr>
+<h2 id="bab-22-immutable-inventory-movement-ledger">Bab 22 — Immutable Inventory Movement Ledger<a class="header-anchor" href="#bab-22-immutable-inventory-movement-ledger" title="Tautan langsung ke seksi ini">#</a></h2>
+<h3 id="221-aturan-filosofis-quottidak-ada-perubahan-stok-tanpa-ledgerquot">22.1 Aturan Filosofis: &quot;Tidak Ada Perubahan Stok Tanpa Ledger&quot;<a class="header-anchor" href="#221-aturan-filosofis-quottidak-ada-perubahan-stok-tanpa-ledgerquot" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Nilai kolom <code>stock</code> pada tabel <code>products</code> hanyalah <strong>proyeksi cache</strong>. Kebenaran mutlak atas sisa barang dihitung dari akumulasi riwayat pergerakan pada tabel <code>stockLogs</code>:</p>
+<p>$$\text{Stok Aktual} = \sum_{\text{semua log}} \text{Quantity}$$</p>
+<pre><code>┌─────────────────┬───────────┬────────────────────────────────────────────┐
+│ Movement Type   │ Nilai Qty │ Keterangan Pemicu                          │
+├─────────────────┼───────────┼────────────────────────────────────────────┤
+│ INITIAL_STOCK   │ Positif   │ Saldo awal barang saat pertama didaftarkan │
+│ SALE            │ Negatif   │ Pengurangan otomatis akibat penjualan kasir│
+│ VOID            │ Positif   │ Pengembalian barang akibat faktur dibatalkan│
+│ RETURN          │ Positif   │ Retur barang dari pembeli                  │
+│ RESTOCK         │ Positif   │ Kulakan barang masuk dari supplier         │
+│ ADJUSTMENT      │ +/- Bebas │ Penyesuaian barang rusak, hilang, bocor    │
+│ STOCK_OPNAME    │ +/- Selisih│ Rekonsiliasi fisik berkala                │
+└─────────────────┴───────────┴────────────────────────────────────────────┘
+</code></pre>
+<hr>
+<h2 id="bab-23-purchase-engine-amp-supplier-management">Bab 23 — Purchase Engine &amp; Supplier Management<a class="header-anchor" href="#bab-23-purchase-engine-amp-supplier-management" title="Tautan langsung ke seksi ini">#</a></h2>
+<h3 id="231-alur-pengadaan-barang-masuk-restock-flow">23.1 Alur Pengadaan Barang Masuk (Restock Flow)<a class="header-anchor" href="#231-alur-pengadaan-barang-masuk-restock-flow" title="Tautan langsung ke seksi ini">#</a></h3>
+<ol>
+<li>Pemilik memilih pemasok dari tabel <code>suppliers</code>.</li>
+<li>Menambahkan daftar barang yang dibeli beserta harga kulakan terbaru.</li>
+<li>Saat faktur berstatus <code>RECEIVED</code>, sistem secara atomik:<ul>
+<li>Membuat entri pembelian di tabel <code>purchases</code> dan <code>purchaseItems</code>.</li>
+<li>Menerbitkan entri <code>RESTOCK</code> di <code>stockLogs</code>.</li>
+<li>Memperbarui HPP dasar (<code>buyPrice</code>) pada master <code>products</code>.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h2 id="bab-24-stock-opname-amp-reconciliation-engine">Bab 24 — Stock Opname &amp; Reconciliation Engine<a class="header-anchor" href="#bab-24-stock-opname-amp-reconciliation-engine" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Stock opname adalah fitur pengendalian inventori toko untuk mencocokkan stok fisik di rak dengan stok di sistem.</p>
+<pre><code> [ Buka Sesi Stock Opname ]
+            │
+            ▼
+ [ Mode Blind Count ] ──( Staf kasir menghitung fisik tanpa melihat angka sistem )
+            │
+            ▼
+ [ Perbandingan Varian ] ──( Sistem menghitung Selisih = Hitungan Fisik - Stok Sistem )
+            │
+            ├── Jika Selisih = 0 : Stok Cocok (Sempurna)
+            └── Jika Selisih != 0: Minta Otorisasi PIN Owner
+                        │
+                        ▼
+            [ Eksekusi Rekonsiliasi Otomatis ]
+            - Tulis mutasi tipe `STOCK_OPNAME` sebesar selisih ke `stockLogs`
+            - Perbarui cache `stock` di master `products`
+</code></pre>
+<hr>
+<h2 id="bab-25-multi-unit-amp-uom-conversion-engine">Bab 25 — Multi-Unit &amp; UoM Conversion Engine<a class="header-anchor" href="#bab-25-multi-unit-amp-uom-conversion-engine" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Untuk toko kelontong dan grosir, Kasirio mengonversi satuan bertingkat berbasis <strong>Unit Terkecil (Base Unit)</strong>:</p>
+<pre><code> 1 Dus Indomie = 40 Bungkus (Base Unit: Bungkus)
+  - Kasir menjual 1 Dus     ──► Ledger memotong: -40 Bungkus
+  - Kasir menjual 3 Bungkus ──► Ledger memotong: -3 Bungkus
+</code></pre>
+<p>Semua kalkulasi persediaan di level basis data disimpan dalam unit terkecil guna menghindari kesalahan desimal pembagian stok.</p>
+<hr>
+<h1 id="bagian-vi-customer-amp-finance">BAGIAN VI — CUSTOMER &amp; FINANCE<a class="header-anchor" href="#bagian-vi-customer-amp-finance" title="Tautan langsung ke seksi ini">#</a></h1>
+<hr>
+<h2 id="bab-26-customer-engine-amp-rekam-belanja">Bab 26 — Customer Engine &amp; Rekam Belanja<a class="header-anchor" href="#bab-26-customer-engine-amp-rekam-belanja" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Database pelanggan memungkinkan UMKM membangun relasi jangka panjang dengan pelanggannya.</p>
+<ul>
+<li>Mencatat nama, nomor telepon (WhatsApp), dan alamat.</li>
+<li>Menampilkan metrik frekuensi belanja, tanggal kunjungan terakhir, dan total omzet yang dihasilkan oleh pelanggan tersebut.</li>
+</ul>
+<hr>
+<h2 id="bab-27-kasbon-engine-piutang-usaha-tradisional">Bab 27 — Kasbon Engine (Piutang Usaha Tradisional)<a class="header-anchor" href="#bab-27-kasbon-engine-piutang-usaha-tradisional" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Kasbon adalah instrumen perdagangan penting bagi warung tradisional di Indonesia. Kasirio mendigitalisasi buku hutang manual ke dalam sistem yang aman:</p>
+<pre><code>┌────────────────────────────────────────────────────────────────────────┐
+│                        ALUR KASBON KASIRIO                             │
+├────────────────────────────────────────────────────────────────────────┤
+│ 1. Pelanggan checkout belanjaan, memilih metode &#39;KASBON&#39;.              │
+│ 2. Sistem memeriksa apakah total utang aktif melampaui `maxDebtLimit`. │
+│ 3. Jika aman, transaksi disahkan; `customerDebts` mencatat tagihan baru.│
+│ 4. Total saldo hutang pada profil `customers` bertambah.               │
+│ 5. Pelanggan mencicil/melunasi di kemudian hari via `debtPayments`.    │
+│ 6. Uang masuk dicatat ke dalam laci kas shift kasir yang sedang aktif. │
+└────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr>
+<h2 id="bab-28-cash-session-engine-shift-kasir-amp-rekonsiliasi-kas">Bab 28 — Cash Session Engine (Shift Kasir &amp; Rekonsiliasi Kas)<a class="header-anchor" href="#bab-28-cash-session-engine-shift-kasir-amp-rekonsiliasi-kas" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Untuk mencegah kehilangan uang tunai di laci kasir, Kasirio menerapkan kontrol shift ketat berbasis <strong>Blind Cash Count Sequence</strong>:</p>
+<pre><code class="language-mermaid">sequenceDiagram
+    autonumber
+    actor Kasir
+    participant POS as Antarmuka Kasir
+    participant DB as Dexie (IndexedDB)
+    actor Owner
+
+    Note over Kasir, POS: Awal Jam Kerja (Buka Shift)
+    Kasir-&gt;&gt;POS: Buka Shift (Input Modal Awal Laci, misal: Rp 200.000)
+    POS-&gt;&gt;DB: Simpan cashSessions (status: OPEN)
+    
+    Note over Kasir, POS: Operasional Harian
+    Kasir-&gt;&gt;POS: Transaksi Penjualan Tunai / Kas Masuk / Kas Keluar
+    POS-&gt;&gt;DB: Akumulasi expectedCash di background
+
+    Note over Kasir, POS: Akhir Jam Kerja (Tutup Shift)
+    Kasir-&gt;&gt;POS: Ajukan Tutup Shift
+    POS-&gt;&gt;Kasir: Tampilkan Modal Hitung Fisik Buta (Blind Count Form)
+    Note right of Kasir: Kasir TIDAK diberi tahu berapa total sistem!
+    Kasir-&gt;&gt;POS: Input Uang Fisik Hasil Hitungan Tangan (misal: Rp 1.450.000)
+    POS-&gt;&gt;DB: Bandingkan actualCash vs expectedCash
+    alt Terdapat Selisih (Variance != 0)
+        POS-&gt;&gt;Owner: Munculkan Dialog Peringatan Selisih Kas &amp; Minta PIN Otorisasi
+        Owner-&gt;&gt;POS: Input PIN Otorisasi
+        POS-&gt;&gt;DB: Simpan cashSessions (status: CLOSED, variance: -Rp 20.000)
+        POS-&gt;&gt;DB: Tulis temuan ke auditLogs (Severity: WARN)
+    else Uang Cocok (Variance == 0)
+        POS-&gt;&gt;DB: Simpan cashSessions (status: CLOSED, variance: 0)
+    end
+    POS-&gt;&gt;Kasir: Cetak Lembar Rekonsiliasi Shift Kasir
+</code></pre>
+<hr>
+<h2 id="bab-29-reports-amp-financial-analytics-engine">Bab 29 — Reports &amp; Financial Analytics Engine<a class="header-anchor" href="#bab-29-reports-amp-financial-analytics-engine" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Laporan keuangan Kasirio dihitung langsung dari data transaksi lokal tanpa latensi jaringan:</p>
+<ol>
+<li><strong>Omzet Bruto (Gross Revenue):</strong> $\sum \text{Subtotal Transaksi}$</li>
+<li><strong>Omzet Netto (Net Revenue):</strong> $\text{Omzet Bruto} - \text{Diskon} - \text{Retur}$</li>
+<li><strong>Harga Pokok Penjualan (COGS):</strong> $\sum (\text{BuyPrice Historical} \times \text{Qty Terjual})$</li>
+<li><strong>Laba Kotor (Gross Profit):</strong> $\text{Omzet Netto} - \text{COGS}$</li>
+<li><strong>Analisis Pareto 80/20 Produk Terlaris:</strong> Menampilkan 20% SKU barang yang menyumbang 80% perputaran uang toko.</li>
+</ol>
+<hr>
+<h1 id="bagian-vii-security-architecture">BAGIAN VII — SECURITY ARCHITECTURE<a class="header-anchor" href="#bagian-vii-security-architecture" title="Tautan langsung ke seksi ini">#</a></h1>
+<hr>
+<h2 id="bab-30-arsitektur-autentikasi-amp-pin-gate">Bab 30 — Arsitektur Autentikasi &amp; PIN Gate<a class="header-anchor" href="#bab-30-arsitektur-autentikasi-amp-pin-gate" title="Tautan langsung ke seksi ini">#</a></h2>
+<h3 id="301-kriptografi-penyimpanan-pin">30.1 Kriptografi Penyimpanan PIN<a class="header-anchor" href="#301-kriptografi-penyimpanan-pin" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>PIN pengguna (Owner, Manager, Kasir) tidak pernah disimpan dalam format teks polos (<em>plaintext</em>). Kasirio menggunakan algoritma SHA-256 lokal yang dikombinasikan dengan garam kriptografis (<em>cryptographic salt</em>):</p>
+<p>$$\text{StoredHash} = \text{SHA256}(\text{PIN} + \text{StoreSalt})$$</p>
+<h3 id="302-pin-gate-interceptor">30.2 PIN Gate Interceptor<a class="header-anchor" href="#302-pin-gate-interceptor" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Setiap aksi sensitif di antarmuka kasir dicegat oleh komponen pengunci <code>PINGateModal</code>:</p>
+<ul>
+<li>Kasir menekan tombol &quot;Void Transaksi&quot;.</li>
+<li>Antarmuka memblokir eksekusi dan memunculkan modal PIN.</li>
+<li>Hanya PIN dengan role <code>OWNER</code> atau <code>MANAGER</code> yang dapat meloloskan eksekusi.</li>
+</ul>
+<hr>
+<h2 id="bab-31-arsitektur-otorisasi-role-amp-permission-matrix">Bab 31 — Arsitektur Otorisasi (Role &amp; Permission Matrix)<a class="header-anchor" href="#bab-31-arsitektur-otorisasi-role-amp-permission-matrix" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Hak akses sistem diatur berdasarkan matriks izin ketat:</p>
+<table>
+<thead>
+<tr>
+<th>Kode Permission</th>
+<th>Deskripsi Aksi</th>
+<th align="center">Kasir</th>
+<th align="center">Manager</th>
+<th align="center">Owner</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>POS_CHECKOUT</code></td>
+<td>Melakukan checkout transaksi biasa</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td><code>POS_HOLD_CART</code></td>
+<td>Menahan dan memanggil antrean belanja</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td><code>POS_VOID</code></td>
+<td>Membatalkan faktur yang sudah lunas</td>
+<td align="center">❌ (Butuh PIN)</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td><code>DISCOUNT_MANUAL_LARGE</code></td>
+<td>Memberi diskon manual &gt; 10%</td>
+<td align="center">❌ (Butuh PIN)</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td><code>DRAWER_OPEN_MANUAL</code></td>
+<td>Membuka laci kas tanpa transaksi</td>
+<td align="center">❌ (Butuh PIN)</td>
+<td align="center">✅</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td><code>INVENTORY_EDIT</code></td>
+<td>Mengubah harga jual / nama produk</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td><code>STOCK_OVERRIDE</code></td>
+<td>Menimpa angka stok secara manual</td>
+<td align="center">❌</td>
+<td align="center">❌ (Butuh PIN)</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td><code>VIEW_PROFIT_REPORT</code></td>
+<td>Melihat laporan margin laba bersih</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+</tr>
+<tr>
+<td><code>BACKUP_RESTORE</code></td>
+<td>Ekspor / Impor basis data lokal</td>
+<td align="center">❌</td>
+<td align="center">❌</td>
+<td align="center">✅</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="bab-32-audit-logging-amp-forensic-trail">Bab 32 — Audit Logging &amp; Forensic Trail<a class="header-anchor" href="#bab-32-audit-logging-amp-forensic-trail" title="Tautan langsung ke seksi ini">#</a></h2>
+<h3 id="321-klasifikasi-severity-audit">32.1 Klasifikasi Severity Audit<a class="header-anchor" href="#321-klasifikasi-severity-audit" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Setiap entri dalam tabel <code>auditLogs</code> memiliki derajat keparahan:</p>
+<ol>
+<li><strong>INFO:</strong> Operasional rutin (Buka shift, ekspor laporan berkala).</li>
+<li><strong>WARN:</strong> Potensi anomali (Diskon manual 5-10%, selisih hitung laci kecil).</li>
+<li><strong>CRITICAL:</strong> Aksi berisiko tinggi (Void faktur lunas, pembukaan paksa laci kas tanpa belanja, pemulihan cadangan data JSON).</li>
+</ol>
+<hr>
+<h2 id="bab-33-backup-amp-disaster-recovery-engine">Bab 33 — Backup &amp; Disaster Recovery Engine<a class="header-anchor" href="#bab-33-backup-amp-disaster-recovery-engine" title="Tautan langsung ke seksi ini">#</a></h2>
+<h3 id="331-spesifikasi-berkas-cadangan-json">33.1 Spesifikasi Berkas Cadangan JSON<a class="header-anchor" href="#331-spesifikasi-berkas-cadangan-json" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Format backup Kasirio mengemas seluruh tabel basis data ke dalam satu berkas <code>.json</code> dengan metadata integritas:</p>
+<pre><code class="language-json">{
+  &quot;kasirio_backup_version&quot;: &quot;1.0&quot;,
+  &quot;created_at&quot;: &quot;2026-09-17T12:00:00.000Z&quot;,
+  &quot;app_version&quot;: &quot;1.0.0&quot;,
+  &quot;store_id&quot;: &quot;str-98a7b6c5-d4e3-4f2a-1b0c-9d8e7f6a5b4c&quot;,
+  &quot;checksum&quot;: &quot;a1b2c3d4e5f6...&quot;,
+  &quot;tables&quot;: {
+    &quot;products&quot;: [...],
+    &quot;transactions&quot;: [...],
+    &quot;transactionItems&quot;: [...],
+    &quot;stockLogs&quot;: [...],
+    &quot;customers&quot;: [...],
+    &quot;auditLogs&quot;: [...]
+  }
+}
+</code></pre>
+<h3 id="332-protokol-pemulihan-data-restore-protocol">33.2 Protokol Pemulihan Data (Restore Protocol)<a class="header-anchor" href="#332-protokol-pemulihan-data-restore-protocol" title="Tautan langsung ke seksi ini">#</a></h3>
+<ol>
+<li><strong>Verifikasi Schema:</strong> Memeriksa apakah versi skema berkas cadangan kompatibel dengan aplikasi.</li>
+<li><strong>Karantina Basis Data Lama:</strong> Mengekspor snapshot darurat sebelum proses timpa dimulai.</li>
+<li><strong>Restorasi Atomik:</strong> Menulis seluruh data baru menggunakan transaksi Dexie.</li>
+</ol>
+<hr>
+<h1 id="bagian-viii-platform-services">BAGIAN VIII — PLATFORM SERVICES<a class="header-anchor" href="#bagian-viii-platform-services" title="Tautan langsung ke seksi ini">#</a></h1>
+<hr>
+<h2 id="bab-34-pwa-engine-amp-service-worker-lifecycle">Bab 34 — PWA Engine &amp; Service Worker Lifecycle<a class="header-anchor" href="#bab-34-pwa-engine-amp-service-worker-lifecycle" title="Tautan langsung ke seksi ini">#</a></h2>
+<h3 id="341-strategi-registrasi-service-worker-registertype-39prompt39">34.1 Strategi Registrasi Service Worker: <code>registerType: &#39;prompt&#39;</code><a class="header-anchor" href="#341-strategi-registrasi-service-worker-registertype-39prompt39" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Kasirio secara sadar menghindari strategi <code>autoUpdate</code> yang agresif. Pada aplikasi POS, memuat ulang halaman secara paksa di tengah kasir mengetik pembayaran dapat menyebabkan kerugian finansial langsung.</p>
+<ul>
+<li>Sistem mendeteksi pembaruan versi baru di latar belakang.</li>
+<li>Menampilkan toast non-intrusif: <em>&quot;Pembaruan sistem tersedia — Pasang saat kasir luang&quot;</em>.</li>
+<li>Tombol muat ulang hanya aktif jika keranjang belanja dalam kondisi kosong.</li>
+</ul>
+<pre><code class="language-typescript">// vite.config.ts PWA Configuration Snippet
+VitePWA({
+  registerType: &#39;prompt&#39;,
+  manifest: {
+    name: &#39;Kasirio — Kasir Pintar UMKM&#39;,
+    short_name: &#39;Kasirio&#39;,
+    theme_color: &#39;#059669&#39;,
+    background_color: &#39;#ffffff&#39;,
+    display: &#39;standalone&#39;,
+    orientation: &#39;any&#39;
+  },
+  workbox: {
+    globPatterns: [&#39;**/*.{js,css,html,ico,png,svg,woff2}&#39;]
+  }
+})
+</code></pre>
+<hr>
+<h2 id="bab-35-storage-persistence-amp-eviction-shield">Bab 35 — Storage Persistence &amp; Eviction Shield<a class="header-anchor" href="#bab-35-storage-persistence-amp-eviction-shield" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Peramban modern secara berkala menghapus data IndexedDB jika memori penyimpanan perangkat penuh (<em>storage eviction</em>). Kasirio melindungi integritas data toko menggunakan API persistensi peramban:</p>
+<pre><code class="language-typescript">export async function ensureStoragePersistence(): Promise&lt;boolean&gt; {
+  if (typeof window !== &#39;undefined&#39; &amp;&amp; navigator.storage &amp;&amp; navigator.storage.persist) {
+    const isPersisted = await navigator.storage.persist();
+    console.log(`[Kasirio DB] Storage eviction protection active: ${isPersisted}`);
+    return isPersisted;
+  }
+  return false;
+}
+</code></pre>
+<hr>
+<h2 id="bab-36-printer-hardware-abstraction-layer">Bab 36 — Printer Hardware Abstraction Layer<a class="header-anchor" href="#bab-36-printer-hardware-abstraction-layer" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Kasirio menyediakan antarmuka terpadu untuk berkomunikasi dengan berbagai perangkat pencetak struk kasir:</p>
+<pre><code>                  ┌───────────────────────────────┐
+                  │    PRINTER ADAPTER SERVICE    │
+                  └───────────────┬───────────────┘
+                                  │
+         ┌────────────────────────┼────────────────────────┐
+         ▼                        ▼                        ▼
+ [ Web Bluetooth API ]     [ WebUSB API ]           [ RawBT / ESC-POS ]
+ (Printer Thermal Portabel (Printer Kasir Desktop   (Fallback Cetak Standar
+  Mini 58mm Bluetooth)      USB Epson / XPrinter)    CSS @media print)
+</code></pre>
+<hr>
+<h2 id="bab-37-settings-amp-business-parameter-engine">Bab 37 — Settings &amp; Business Parameter Engine<a class="header-anchor" href="#bab-37-settings-amp-business-parameter-engine" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Pengaturan toko memfasilitasi parameterisasi perilaku sistem secara dinamis:</p>
+<ul>
+<li><strong>Toggle Tipe Bisnis:</strong> Menyesuaikan UI Kasir antara mode Retail Cepat (daftar barcode) atau F&amp;B (grid visual meja/menu).</li>
+<li><strong>Konfigurasi Pajak Indonesia:</strong> Pilihan fleksibel antara non-aktif, PPN Retail (11%), atau PB1 Restoran (10%).</li>
+<li><strong>Virtual Soundbox:</strong> Sakelar pengaktif notifikasi suara Web Speech API peramban (<em>&quot;Pembayaran sebesar Rp 50.000 berhasil&quot;</em>).</li>
+</ul>
+<hr>
+<h1 id="bagian-ix-ai-architecture">BAGIAN IX — AI ARCHITECTURE<a class="header-anchor" href="#bagian-ix-ai-architecture" title="Tautan langsung ke seksi ini">#</a></h1>
+<hr>
+<h2 id="bab-38-ai-co-pilot-amp-multimodal-assistant">Bab 38 — AI Co-Pilot &amp; Multimodal Assistant<a class="header-anchor" href="#bab-38-ai-co-pilot-amp-multimodal-assistant" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Kasirio mengintegrasikan kecerdasan buatan Gemini Flash secara etis dan aman untuk memecahkan friksi terbesar pedagang pasar tradisional: <strong>input nota belanja manual bertuliskan tangan</strong>.</p>
+<pre><code>  [ FOTO NOTA PASAR ] ──► [ PROXY EXPRESS TIPIS ] ──► [ GEMINI FLASH VISION ]
+                                                            │
+  ┌─────────────────────────────────────────────────────────┘
+  ▼
+  [ HASIL EKSTRAKSI STRUKTUR DATA JSON ]
+  - Nama Barang, Kuantitas, Satuan, Harga Beli
+  │
+  ▼
+  [ HUMAN-IN-THE-LOOP REVIEW MODAL ]
+  Kasir memeriksa baris per baris, mencocokkan dengan produk toko
+  │
+  ├── Kasir Koreksi Angka yang Salah Baca
+  └── Kasir Tekan Tombol: &quot;Setujui &amp; Masukkan ke Stok&quot;
+        │
+        ▼
+  [ MASUK KE INVENTORY LEDGER (Tipe: RESTOCK) ]
+</code></pre>
+<h3 id="381-arsitektur-isolasi-kredensial-proxy-shield">38.1 Arsitektur Isolasi Kredensial (Proxy Shield)<a class="header-anchor" href="#381-arsitektur-isolasi-kredensial-proxy-shield" title="Tautan langsung ke seksi ini">#</a></h3>
+<p>Panggilan API Gemini <strong>dilarang keras</strong> menggunakan API Key langsung di sisi frontend peramban. Seluruh permintaan dilewatkan melalui companion server proxy lokal/cloud tipis (<code>server.ts</code>) agar kunci rahasia API tidak bocor di bundle JavaScript publik.</p>
+<hr>
+<h1 id="bagian-x-future-architecture">BAGIAN X — FUTURE ARCHITECTURE<a class="header-anchor" href="#bagian-x-future-architecture" title="Tautan langsung ke seksi ini">#</a></h1>
+<hr>
+<h2 id="bab-39-cloud-ready-architecture-amp-sync-engine">Bab 39 — Cloud-Ready Architecture &amp; Sync Engine<a class="header-anchor" href="#bab-39-cloud-ready-architecture-amp-sync-engine" title="Tautan langsung ke seksi ini">#</a></h2>
+<p>Meskipun saat ini beroperasi 100% offline di perangkat lokal, fondasi basis data Kasirio telah dirancang untuk siap menyinkronkan data ke cloud tanpa perubahan skema:</p>
+<ol>
+<li><strong>UUID Identifier:</strong> Menghilangkan tabrakan kunci antar perangkat kasir yang berbeda cabang.</li>
+<li><strong>Event-Sourced Ledger:</strong> Seluruh perubahan adalah deretan entri log bertanggal yang siap di-stream menggunakan protokol Change Data Capture (CDC) atau WebSockets saat koneksi internet terdeteksi.</li>
+</ol>
+<hr>
+<h2 id="bab-40-roadmap-evolusi-arsitektur-5-tahun">Bab 40 — Roadmap Evolusi Arsitektur 5 Tahun<a class="header-anchor" href="#bab-40-roadmap-evolusi-arsitektur-5-tahun" title="Tautan langsung ke seksi ini">#</a></h2>
+<pre><code>  2026 (Horizon 1)    2027 (Horizon 2)    2028 (Horizon 3)    2029-2030 (Horizon 4)
+┌──────────────────┐┌──────────────────┐┌──────────────────┐┌──────────────────────┐
+│ OFFLINE SOLID    ││ CLOUD SYNC MESH  ││ MULTI-BRANCH ERP ││ MERCHANT NETWORK B2B │
+├──────────────────┤├──────────────────┤├──────────────────┤├──────────────────────┤
+│ - IndexedDB Dexie││ - Cloud Backup   ││ - Transfer Stok  ││ - Auto Order Supplier│
+│ - Dual-Mode Struk││ - Web Dashboard  ││   Antar Cabang   ││ - Pinjaman Modal Bank│
+│ - AI Nota Pasar  ││   Pemilik Jarak  ││ - Konsolidasi    ││ - Integrasi Ekosistem│
+│ - Soundbox Speech││   Jauh           ││   Laba Rugi Grup ││   Marketplace Nasional│
+└──────────────────┘└──────────────────┘└──────────────────┘└──────────────────────┘
+</code></pre>
+<hr>
+<h1 id="standar-kinerja-non-functional-requirements">STANDAR KINERJA (NON-FUNCTIONAL REQUIREMENTS)<a class="header-anchor" href="#standar-kinerja-non-functional-requirements" title="Tautan langsung ke seksi ini">#</a></h1>
+<p>Untuk menjamin kenyamanan operasional kasir harian, aplikasi Kasirio wajib memenuhi standar performa kuantitatif berikut:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter Pengujian</th>
+<th>Target Metrik</th>
+<th>Metode Verifikasi</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Cold Startup Time (PWA Launch)</strong></td>
+<td>&lt; 1.500 ms</td>
+<td>Pengujian Lighthouse pada perangkat Android low-end (CPU throttling 4x)</td>
+</tr>
+<tr>
+<td><strong>Pencarian Katalog Produk (1.000 SKU)</strong></td>
+<td>&lt; 30 ms</td>
+<td>Query Dexie.js dengan compound index pada kolom teks</td>
+</tr>
+<tr>
+<td><strong>Latensi Input Barcode Scanner</strong></td>
+<td>&lt; 16 ms</td>
+<td>Event dispatch keyboard buffer hardware scanner fisik</td>
+</tr>
+<tr>
+<td><strong>Komitmen Transaksi Basis Data</strong></td>
+<td>&lt; 50 ms</td>
+<td>Pengukuran durasi eksekusi atomic multi-write IndexedDB</td>
+</tr>
+<tr>
+<td><strong>Ukuran Bundle Produksi Awal (Gzip)</strong></td>
+<td>&lt; 250 KB</td>
+<td>Analisis hasil build <code>vite build</code></td>
+</tr>
+<tr>
+<td><strong>Ketersediaan Transaksi Offline</strong></td>
+<td>100%</td>
+<td>Uji checkout kasir saat mode pesawat aktif dan service worker online</td>
+</tr>
+<tr>
+<td><strong>Konsumsi Baterai Operasional</strong></td>
+<td>&lt; 8% / jam</td>
+<td>Uji pemakaian kasir berkelanjutan di tablet Android 5000 mAh</td>
+</tr>
+</tbody></table>
+<hr>
+<h1 id="standar-koding-amp-pola-implementasi">STANDAR KODING &amp; POLA IMPLEMENTASI<a class="header-anchor" href="#standar-koding-amp-pola-implementasi" title="Tautan langsung ke seksi ini">#</a></h1>
+<ol>
+<li><strong>TypeScript Strict Mode:</strong> Seluruh file kode wajib lulus kompilasi <code>tsc --noEmit</code> tanpa ada penggunaan tipe <code>any</code>.</li>
+<li><strong>Repository &amp; Service Pattern:</strong> Interaksi ke basis data Dexie tidak boleh ditulis langsung di dalam event handler komponen UI; bungkus dalam service helper yang terisolasi.</li>
+<li><strong>Pure Functions untuk Kalkulasi Keuangan:</strong> Perhitungan pajak, diskon, dan kembalian wajib berupa fungsi murni (<em>pure functions</em>) yang diuji secara mendalam pada unit test Vitest.</li>
+<li><strong>Desain Komponen UI:</strong> Wajib menyertakan penanganan kondisi: <code>Loading</code>, <code>Empty State</code>, <code>Error State</code>, dan <code>Success Feedback</code>.</li>
+</ol>
+<hr>
+<h1 id="architecture-decision-records-adr">ARCHITECTURE DECISION RECORDS (ADR)<a class="header-anchor" href="#architecture-decision-records-adr" title="Tautan langsung ke seksi ini">#</a></h1>
+<p>Dokumentasi keputusan arsitektur resmi yang melandasi evolusi teknis proyek Kasirio:</p>
+<h3 id="adr-001-adopsi-arsitektur-offline-first">ADR-001: Adopsi Arsitektur Offline-First<a class="header-anchor" href="#adr-001-adopsi-arsitektur-offline-first" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> UMKM Indonesia sering menghadapi koneksi internet yang labil di pasar dan ruko.</li>
+<li><strong>Keputusan:</strong> Menjadikan peramban lokal sebagai pusat komputasi dan basis data transaksi utama.</li>
+<li><strong>Konsekuensi:</strong> Logika checkout harus sepenuhnya independen dari jaringan eksternal.</li>
+</ul>
+<h3 id="adr-002-pemilihan-dexiejs-di-atas-indexeddb-murni">ADR-002: Pemilihan Dexie.js di Atas IndexedDB Murni<a class="header-anchor" href="#adr-002-pemilihan-dexiejs-di-atas-indexeddb-murni" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> API IndexedDB native peramban sangat bertele-tele dan berbasis event callback lama.</li>
+<li><strong>Keputusan:</strong> Menggunakan Dexie.js v4 sebagai wrapper ORM standar.</li>
+<li><strong>Konsekuensi:</strong> Kode lebih ringkas, aman dengan transaksi atomik terpadu, dan reaktif via hooks.</li>
+</ul>
+<h3 id="adr-003-pemisahan-tabel-transaksi-menjadi-header-dan-items">ADR-003: Pemisahan Tabel Transaksi Menjadi Header dan Items<a class="header-anchor" href="#adr-003-pemisahan-tabel-transaksi-menjadi-header-dan-items" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Menyimpan item belanja sebagai array di dalam satu row transaksi menyulitkan query agregat.</li>
+<li><strong>Keputusan:</strong> Memisahkan data menjadi tabel <code>transactions</code> dan <code>transactionItems</code>.</li>
+<li><strong>Konsekuensi:</strong> Membutuhkan penulisan atomik, namun mempercepat pelaporan barang terlaris hingga 400%.</li>
+</ul>
+<h3 id="adr-004-penerapan-immutable-inventory-movement-ledger">ADR-004: Penerapan Immutable Inventory Movement Ledger<a class="header-anchor" href="#adr-004-penerapan-immutable-inventory-movement-ledger" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Penimpaan angka stok secara langsung memicu drift data dan membuat audit persediaan mustahil.</li>
+<li><strong>Keputusan:</strong> Mewajibkan penulisan setiap perubahan stok ke tabel <code>stockLogs</code>.</li>
+<li><strong>Konsekuensi:</strong> Integritas stok 100% dapat dilacak mundur ke belakang.</li>
+</ul>
+<h3 id="adr-005-sistem-struk-dual-mode-dynamic-qr-offline">ADR-005: Sistem Struk Dual-Mode (Dynamic QR Offline)<a class="header-anchor" href="#adr-005-sistem-struk-dual-mode-dynamic-qr-offline" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Harga kertas struk thermal menjadi beban operasional tetap yang mahal bagi pedagang kecil.</li>
+<li><strong>Keputusan:</strong> Menyediakan Dynamic QR Struk offline sebagai alternatif cetak fisik.</li>
+<li><strong>Konsekuensi:</strong> Menghemat biaya kertas hingga 60% bagi toko yang mengadopsinya.</li>
+</ul>
+<h3 id="adr-006-monetisasi-melalui-koin-kasirio-closed-loop-token">ADR-006: Monetisasi Melalui Koin Kasirio (Closed-Loop Token)<a class="header-anchor" href="#adr-006-monetisasi-melalui-koin-kasirio-closed-loop-token" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif dalam <strong>Mode Simulasi Sandbox</strong> — bukan status hukum final.</li>
+<li><strong>Konteks:</strong> Potongan 30% dari Google Play Store ingin dihindari melalui token prabayar internal. Namun status kepatuhan token ini terhadap regulasi uang elektronik/PJP Bank Indonesia <strong>belum divalidasi oleh legal/konsultan compliance eksternal</strong> — desain closed-loop saja tidak otomatis berarti lolos definisi pengecualian BI.</li>
+<li><strong>Keputusan:</strong> Menggunakan Koin Kasirio sebagai token prabayar layanan internal (penukaran masa aktif Pro, bukan alat pembayaran umum). Selama audit regulasi PBI/PJP belum selesai, seluruh alur transaksi Koin berjalan dalam <strong>status Simulasi Sandbox</strong> (tidak menarik dana riil) disertai disclaimer eksplisit di UI — lihat implementasi di <a href="../src/components/settings/SettingsView.tsx">SettingsView.tsx</a>.</li>
+<li><strong>Konsekuensi:</strong> Berpotensi bebas dari regulasi PBI/PJP dan pajak marketplace aplikasi <strong>jika</strong> audit legal mengonfirmasi desainnya sah — ini asumsi yang sedang diuji, bukan fakta yang sudah final. Tombol pembelian/top-up Koin dengan dana riil <strong>tidak boleh dibuka ke pengguna produksi</strong> sampai validasi legal selesai dan status ADR ini diperbarui menjadi final.</li>
+</ul>
+<h3 id="adr-007-pin-gate-otorisasi-aksi-sensitif">ADR-007: PIN Gate Otorisasi Aksi Sensitif<a class="header-anchor" href="#adr-007-pin-gate-otorisasi-aksi-sensitif" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Kasir berpotensi melakukan kecurangan melalui void faktur atau manipulasi diskon manual.</li>
+<li><strong>Keputusan:</strong> Memasang gerbang PIN Owner pada aksi void, diskon &gt; 10%, dan buka laci kas.</li>
+<li><strong>Konsekuensi:</strong> Menekan potensi kebocoran finansial di toko dengan banyak kasir.</li>
+</ul>
+<h3 id="adr-008-hardware-barcode-buffer-dengan-threshold-waktu-lt50ms">ADR-008: Hardware Barcode Buffer dengan Threshold Waktu &lt;50ms<a class="header-anchor" href="#adr-008-hardware-barcode-buffer-dengan-threshold-waktu-lt50ms" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Input scanner barcode fisik tertukar dengan ketikan biasa di kolom teks form.</li>
+<li><strong>Keputusan:</strong> Menyaring ketukan keyboard berbasis jeda waktu kecepatan scanner hardware.</li>
+<li><strong>Konsekuensi:</strong> Barcode terpindai akurat tanpa kasir harus mengklik kolom input terlebih dahulu.</li>
+</ul>
+<h3 id="adr-009-service-worker-update-strategy-registertype-39prompt39">ADR-009: Service Worker Update Strategy <code>registerType: &#39;prompt&#39;</code><a class="header-anchor" href="#adr-009-service-worker-update-strategy-registertype-39prompt39" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Pembaruan cache otomatis dapat me-reload halaman saat kasir sedang mengetik pembayaran.</li>
+<li><strong>Keputusan:</strong> Menampilkan tombol pembaruan yang hanya diizinkan saat keranjang kosong.</li>
+<li><strong>Konsekuensi:</strong> Nol insiden transaksi hilang akibat reload aplikasi mendadak.</li>
+</ul>
+<h3 id="adr-010-pelindung-eviction-penyimpanan-via-navigatorstoragepersist">ADR-010: Pelindung Eviction Penyimpanan via <code>navigator.storage.persist()</code><a class="header-anchor" href="#adr-010-pelindung-eviction-penyimpanan-via-navigatorstoragepersist" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Sistem operasi HP sering menghapus IndexedDB secara sepihak saat memori penuh.</li>
+<li><strong>Keputusan:</strong> Meminta izin persistensi penyimpanan eksplisit saat inisialisasi basis data.</li>
+<li><strong>Konsekuensi:</strong> Data transaksi terlindungi dari pembersihan cache otomatis peramban.</li>
+</ul>
+<h3 id="adr-011-penggunaan-uuid-v4-untuk-kunci-primer">ADR-011: Penggunaan UUID v4 untuk Kunci Primer<a class="header-anchor" href="#adr-011-penggunaan-uuid-v4-untuk-kunci-primer" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Kunci integer auto-increment bentrok saat data dari multi-perangkat disinkronkan ke cloud.</li>
+<li><strong>Keputusan:</strong> Menstandarkan seluruh ID entitas menggunakan string UUID v4 / string bertanggal.</li>
+<li><strong>Konsekuensi:</strong> Skema data 100% siap untuk ekspansi multi-cabang tanpa modifikasi struktur.</li>
+</ul>
+<h3 id="adr-012-pendekatan-human-in-the-loop-pada-ai-ocr-nota-pasar">ADR-012: Pendekatan Human-in-the-Loop pada AI OCR Nota Pasar<a class="header-anchor" href="#adr-012-pendekatan-human-in-the-loop-pada-ai-ocr-nota-pasar" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Tulisan tangan pedagang pasar tradisional terkadang memiliki ambiguitas angka.</li>
+<li><strong>Keputusan:</strong> Mewajibkan layar pratinjau review kasir sebelum hasil OCR masuk ke buku stok utama.</li>
+<li><strong>Konsekuensi:</strong> Mencegah kesalahan data stok akibat halusinasi model kecerdasan buatan.</li>
+</ul>
+<h3 id="adr-013-proteksi-kredensial-ai-menggunakan-companion-express-proxy">ADR-013: Proteksi Kredensial AI Menggunakan Companion Express Proxy<a class="header-anchor" href="#adr-013-proteksi-kredensial-ai-menggunakan-companion-express-proxy" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Kunci API Google Gemini tidak boleh diekspos di dalam kode sumber frontend publik.</li>
+<li><strong>Keputusan:</strong> Menyediakan proxy lokal/cloud tipis yang menginjeksikan API Key secara aman.</li>
+<li><strong>Konsekuensi:</strong> Menjaga keamanan tagihan API pemilik produk.</li>
+</ul>
+<h3 id="adr-014-virtual-soundbox-menggunakan-web-speech-api-bawaan-peramban">ADR-014: Virtual Soundbox Menggunakan Web Speech API Bawaan Peramban<a class="header-anchor" href="#adr-014-virtual-soundbox-menggunakan-web-speech-api-bawaan-peramban" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Perangkat hardware Soundbox fisik memerlukan biaya sewa bulanan yang memberatkan UMKM.</li>
+<li><strong>Keputusan:</strong> Memanfaatkan Web Speech API browser untuk menyuarakan notifikasi pembayaran.</li>
+<li><strong>Konsekuensi:</strong> Solusi gratis dengan pengalaman pengguna yang setara perangkat hardware mahal.</li>
+</ul>
+<h3 id="adr-015-penyelenggaraan-fitur-buku-kasbon-terintegrasi">ADR-015: Penyelenggaraan Fitur Buku Kasbon Terintegrasi<a class="header-anchor" href="#adr-015-penyelenggaraan-fitur-buku-kasbon-terintegrasi" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Budaya kasbon langganan adalah pilar transaksi utama warung tradisional Indonesia.</li>
+<li><strong>Keputusan:</strong> Memasukkan Kasbon sebagai metode pembayaran resmi yang terhubung ke buku piutang.</li>
+<li><strong>Konsekuensi:</strong> Mempermudah pencatatan dan penagihan hutang pelanggan secara transparan.</li>
+</ul>
+<h3 id="adr-016-blind-cash-count-pada-sesi-tutup-shift-kasir">ADR-016: Blind Cash Count pada Sesi Tutup Shift Kasir<a class="header-anchor" href="#adr-016-blind-cash-count-pada-sesi-tutup-shift-kasir" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Kasir cenderung menyamakan angka hitungan jika sistem menampilkan total ekspektasi kas.</li>
+<li><strong>Keputusan:</strong> Menyembunyikan angka hitungan sistem sampai kasir selesai menghitung uang fisik.</li>
+<li><strong>Konsekuensi:</strong> Rekonsiliasi selisih kas menjadi 100% jujur dan akurat.</li>
+</ul>
+<h3 id="adr-017-dukungan-standar-cetak-kertas-lebar-58mm-dan-80mm">ADR-017: Dukungan Standar Cetak Kertas Lebar 58mm dan 80mm<a class="header-anchor" href="#adr-017-dukungan-standar-cetak-kertas-lebar-58mm-dan-80mm" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Pasar Indonesia didominasi printer thermal murah berukuran 58mm dan 80mm.</li>
+<li><strong>Keputusan:</strong> Menyediakan aturan CSS <code>@media print</code> terkalibrasi khusus untuk kedua ukuran tersebut.</li>
+<li><strong>Konsekuensi:</strong> Hasil cetakan struk rapi tanpa terpotong atau menimbulkan baris kosong berlebih.</li>
+</ul>
+<h3 id="adr-018-skema-pencadangan-berkas-json-tunggal">ADR-018: Skema Pencadangan Berkas JSON Tunggal<a class="header-anchor" href="#adr-018-skema-pencadangan-berkas-json-tunggal" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Pengguna awam membutuhkan cara memindahkan data saat berganti perangkat kerja.</li>
+<li><strong>Keputusan:</strong> Membuat utilitas ekspor/impor seluruh tabel ke dalam satu berkas <code>.json</code> terstruktur.</li>
+<li><strong>Konsekuensi:</strong> Pemulihan bencana data dapat dilakukan sendiri oleh pemilik toko tanpa bantuan IT.</li>
+</ul>
+<h3 id="adr-019-evaluasi-css-menggunakan-tailwind-v4-modern">ADR-019: Evaluasi CSS Menggunakan Tailwind v4 Modern<a class="header-anchor" href="#adr-019-evaluasi-css-menggunakan-tailwind-v4-modern" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Membutuhkan build time yang sangat cepat dan styling yang konsisten di semua resolusi.</li>
+<li><strong>Keputusan:</strong> Memakai Tailwind CSS v4 dengan performa kompilasi LightningCSS.</li>
+<li><strong>Konsekuensi:</strong> Bundle CSS produksi sangat ramping dengan utilisasi memori minimal.</li>
+</ul>
+<h3 id="adr-020-standarisasi-jam-dan-tanggal-berbasis-standar-iso-8601">ADR-020: Standarisasi Jam dan Tanggal Berbasis Standar ISO-8601<a class="header-anchor" href="#adr-020-standarisasi-jam-dan-tanggal-berbasis-standar-iso-8601" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Status:</strong> Diterima &amp; Aktif</li>
+<li><strong>Konteks:</strong> Perbedaan zona waktu di Indonesia (WIB, WITA, WIT) sering mengacaukan pelaporan keuangan.</li>
+<li><strong>Keputusan:</strong> Semua timestamp disimpan dalam format ISO-8601 UTC di basis data dan dikonversi saat render.</li>
+<li><strong>Konsekuensi:</strong> Integritas urutan waktu transaksi tetap terjaga konsisten di mana pun toko berada.</li>
+</ul>
+<hr>
+<h1 id="rfc-index">RFC INDEX<a class="header-anchor" href="#rfc-index" title="Tautan langsung ke seksi ini">#</a></h1>
+<p>Daftar Request for Comments (RFC) resmi untuk pengembangan arsitektur Kasirio di masa mendatang:</p>
+<ul>
+<li><strong>RFC-001:</strong> Spesifikasi Format Kompresi Data Dynamic QR Struk v2</li>
+<li><strong>RFC-002:</strong> Protokol Sinkronisasi Basis Data P2P Antar Terminal Kasir Lokal (WebRTC Mesh)</li>
+<li><strong>RFC-003:</strong> Integrasi Pembayaran QRIS Dinamis Terverifikasi API Midtrans / Xendit</li>
+<li><strong>RFC-004:</strong> Driver Komunikasi Langsung WebUSB untuk Printer Thermal EPSON TM-Series</li>
+<li><strong>RFC-005:</strong> Standar Integrasi Timbangan Digital Serial (Web Serial API) untuk Toko Buah &amp; Daging</li>
+<li><strong>RFC-006:</strong> Arsitektur Ekspor Laporan Otomatis ke Format Spreadsheet Excel &amp; PDF Terenkripsi</li>
+<li><strong>RFC-007:</strong> Model Konversi Multi-Satuan Dinamis (Dus -&gt; Pak -&gt; Satuan Pcs)</li>
+<li><strong>RFC-008:</strong> Otomasi Pengiriman Bukti Struk Transaksi ke WhatsApp Pelanggan via Gateway API</li>
+<li><strong>RFC-009:</strong> Mekanisme Resolusi Konflik Sinkronisasi Multi-Cabang Berbasis CRDT (LWW-Element-Set)</li>
+<li><strong>RFC-010:</strong> Spesifikasi Skema Data Integrasi Mesin EDC Perbankan (BCA, Mandiri, BRI)</li>
+<li><strong>RFC-011:</strong> Modul Manajemen Meja Interaktif &amp; Kitchen Display System (KDS) untuk Mode F&amp;B</li>
+<li><strong>RFC-012:</strong> Algoritma Rekomendasi Restock Otomatis Berbasis Prediksi Penjualan Moving Average</li>
+<li><strong>RFC-013:</strong> Arsitektur Enkripsi Cadangan Data Lokal Menggunakan Kunci Sandi Pemilik (AES-GCM-256)</li>
+<li><strong>RFC-014:</strong> Standardisasi Skema Webhook untuk Integrasi Platform Akuntansi Pihak Ketiga</li>
+<li><strong>RFC-015:</strong> Pengenalan Mode Kios Mandiri (Self-Service Kiosk Mode) dengan Penguncian Layar PIN</li>
+<li><strong>RFC-016:</strong> Sistem Manajemen Poin Loyalitas Pelanggan &amp; Penerbitan Voucher Diskon Toko</li>
+<li><strong>RFC-017:</strong> Dukungan Multi-Tarif Pajak Barang Mewah dan Pembebasan Pajak Parsial</li>
+<li><strong>RFC-018:</strong> Antarmuka Pemindaian Barcode Berkelanjutan Menggunakan Kamera Bawaan HP (BarCodeDetector API)</li>
+<li><strong>RFC-019:</strong> Desain Sistem Kupon Digital &amp; Promosi Bundling Paket Belanja</li>
+<li><strong>RFC-020:</strong> Mekanisme Otomasi Pemeliharaan Basis Data Lokal (Vacuuming &amp; Compaction IndexedDB)</li>
+<li><strong>RFC-021:</strong> Spesifikasi Otomasi Perpanjangan Masa Aktif Paket Pro via Saldo Koin Kasirio</li>
+<li><strong>RFC-022:</strong> Integrasi Katalog Online Publik Berbasis Sinkronisasi Statis GitHub Pages / Cloudflare</li>
+<li><strong>RFC-023:</strong> Peningkatan Akurasi Model AI OCR Nota Khusus Aksara Tulisan Tangan Pasar Basah</li>
+<li><strong>RFC-024:</strong> Kerangka Kerja Audit Forensik Transaksi Kasir Menggunakan Algoritma Deteksi Anomali</li>
+<li><strong>RFC-025:</strong> Protokol Migrasi Data Pindahan dari Sistem POS Kompetitor (Moka, Majoo, Kasir Pintar)</li>
+</ul>
+<hr>
+<h1 id="glosarium-istilah-teknis-amp-bisnis">GLOSARIUM ISTILAH TEKNIS &amp; BISNIS<a class="header-anchor" href="#glosarium-istilah-teknis-amp-bisnis" title="Tautan langsung ke seksi ini">#</a></h1>
+<ul>
+<li><strong>Atomic Transaction:</strong> Serangkaian operasi basis data yang dijamin selesai secara keseluruhan atau dibatalkan sama sekali jika terjadi kegagalan sistem.</li>
+<li><strong>Blind Cash Count:</strong> Prosedur penutupan shift di mana kasir menghitung fisik uang tunai tanpa melihat angka saldo yang dicatat oleh sistem komputer.</li>
+<li><strong>Bounded Context:</strong> Batasan logis eksplisit dalam arsitektur perangkat lunak yang mengisolasi domain bisnis tertentu agar tidak bercampur dengan domain lain.</li>
+<li><strong>CRDT (Conflict-Free Replicated Data Type):</strong> Struktur data yang dapat disinkronkan di beberapa perangkat independen tanpa menimbulkan benturan data.</li>
+<li><strong>COGS (Cost of Goods Sold / HPP):</strong> Total biaya modal yang dikeluarkan untuk memperoleh barang dagangan yang berhasil terjual.</li>
+<li><strong>Dynamic QR Code:</strong> Gambar barcode matriks dua dimensi yang dihasilkan secara dinamis di layar kasir berdasarkan nilai transaksi aktif.</li>
+<li><strong>ESC/POS:</strong> Format perintah standar industri yang diciptakan oleh Epson untuk mengendalikan perangkat pencetak struk kasir thermal.</li>
+<li><strong>Hold Order:</strong> Kemampuan kasir untuk menunda pesanan seorang pelanggan yang antre dan melayani pelanggan lain tanpa menghapus pesanan pertama.</li>
+<li><strong>Human-in-the-Loop:</strong> Paradigma desain sistem AI yang mewajibkan adanya validasi dan persetujuan manusia sebelum hasil keluaran AI dieksekusi oleh sistem.</li>
+<li><strong>Immutable Ledger:</strong> Buku pencatatan transaksi yang hanya dapat ditambahkan baris barunya dan dilarang untuk diubah atau dihapus nilai historisnya.</li>
+<li><strong>IndexedDB:</strong> Sistem basis data transaksional noSQL tingkat lanjut yang tertanam secara bawaan di dalam seluruh peramban web modern.</li>
+<li><strong>Kasbon:</strong> Praktik perdagangan khas Indonesia di mana pembeli diperbolehkan membawa barang dagangan terlebih dahulu dan membayarnya di masa depan.</li>
+<li><strong>PWA (Progressive Web App):</strong> Aplikasi web yang dibangun menggunakan standar modern peramban sehingga dapat diinstal layaknya aplikasi native dan berjalan offline.</li>
+<li><strong>Service Worker:</strong> Skrip latar belakang peramban yang bertindak sebagai proxy jaringan lokal untuk mengelola caching aset dan kemampuan offline.</li>
+<li><strong>Soundbox:</strong> Perangkat audio yang mengeluarkan konfirmasi suara ketika pembayaran digital (seperti QRIS) berhasil diterima oleh kasir.</li>
+<li><strong>Variance:</strong> Selisih matematis antara hitungan fisik uang di laci kasir dengan saldo teoritis yang dicatat oleh sistem pada akhir shift kerja.</li>
+<li><strong>Void:</strong> Pembatalan resmi atas sebuah faktur transaksi yang telah diterbitkan sebelumnya, disertai pengembalian barang dagangan ke buku stok.</li>
+</ul>
+<hr>
+<h1 id="appendix">APPENDIX<a class="header-anchor" href="#appendix" title="Tautan langsung ke seksi ini">#</a></h1>
+<h3 id="appendix-a-design-tokens-amp-palette-standar">Appendix A: Design Tokens &amp; Palette Standar<a class="header-anchor" href="#appendix-a-design-tokens-amp-palette-standar" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>Brand Emerald Primary:</strong> <code>#059669</code> (Tailwind <code>emerald-600</code>) — Mewakili kemakmuran, kepercayaan, dan kejelasan finansial UMKM.</li>
+<li><strong>Brand Emerald Dark:</strong> <code>#047857</code> (Tailwind <code>emerald-700</code>) — Tombol interaksi aktif &amp; header status.</li>
+<li><strong>Accent Slate Surface:</strong> <code>#0f172a</code> (Tailwind <code>slate-900</code>) — Teks kontras tinggi dan latar belakang mode fokus.</li>
+<li><strong>Danger Rose:</strong> <code>#e11d48</code> (Tailwind <code>rose-600</code>) — Penanda aksi pembatalan, tombol void, dan peringatan kritis.</li>
+<li><strong>Touch Target Standar:</strong> Minimal <code>48px x 48px</code> untuk seluruh tombol interaksi layar kasir.</li>
+</ul>
+<h3 id="appendix-b-environment-variables">Appendix B: Environment Variables<a class="header-anchor" href="#appendix-b-environment-variables" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><code>PORT</code>: Port server lokal pendamping proxy (Default: <code>3000</code>).</li>
+<li><code>GEMINI_API_KEY</code>: Kunci rahasia API Google Gemini untuk fungsionalitas asisten AI Vision OCR.</li>
+<li><code>NODE_ENV</code>: Indikator lingkungan eksekusi (<code>development</code> | <code>production</code>).</li>
+</ul>
+<h3 id="appendix-c-feature-flags">Appendix C: Feature Flags<a class="header-anchor" href="#appendix-c-feature-flags" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><code>ENABLE_SOUNDBOX</code>: Mengaktifkan sintesis audio notifikasi pembayaran (Default: <code>true</code>).</li>
+<li><code>ENABLE_AI_NOTA_SCANNER</code>: Menampilkan menu kamera pemindai nota belanja pasar (Default: <code>true</code>).</li>
+<li><code>ENABLE_HOLD_ORDERS</code>: Mengaktifkan tombol penahan antrean belanja (Default: <code>true</code>).</li>
+<li><code>ENABLE_TAX_CALCULATION</code>: Menghitung PPN/PB1 pada kalkulasi keranjang (Default: <code>false</code>).</li>
+</ul>
+<h3 id="appendix-d-error-codes-standar">Appendix D: Error Codes Standar<a class="header-anchor" href="#appendix-d-error-codes-standar" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><code>ERR_DB_INIT_FAILED</code>: Kegagalan inisialisasi basis data lokal IndexedDB.</li>
+<li><code>ERR_PIN_UNAUTHORIZED</code>: Otorisasi PIN kasir/owner ditolak.</li>
+<li><code>ERR_INSUFFICIENT_STOCK</code>: Stok barang di gudang tidak mencukupi untuk penjualan.</li>
+<li><code>ERR_BARCODE_NOT_FOUND</code>: Barcode yang dipindai tidak terdaftar di katalog produk.</li>
+<li><code>ERR_PRINTER_DISCONNECTED</code>: Koneksi hardware pencetak struk terputus atau offline.</li>
+<li><code>ERR_STORAGE_QUOTA_EXCEEDED</code>: Memori penyimpanan peramban melampaui batas yang diizinkan.</li>
+</ul>
+<h3 id="appendix-e-transaction-status-enums">Appendix E: Transaction Status Enums<a class="header-anchor" href="#appendix-e-transaction-status-enums" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><code>LUNAS</code>: Pembayaran telah diterima penuh oleh kasir.</li>
+<li><code>KASBON</code>: Transaksi disahkan dengan penangguhan pembayaran sebagai piutang pelanggan.</li>
+<li><code>BATAL</code>: Transaksi dibatalkan secara resmi melalui otorisasi PIN kasir (Void).</li>
+</ul>
+<h3 id="appendix-f-stock-movement-type-enums">Appendix F: Stock Movement Type Enums<a class="header-anchor" href="#appendix-f-stock-movement-type-enums" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><code>INITIAL_STOCK</code>, <code>SALE</code>, <code>VOID</code>, <code>RETURN</code>, <code>RESTOCK</code>, <code>ADJUSTMENT</code>, <code>STOCK_OPNAME</code>.</li>
+</ul>
+<h3 id="appendix-g-payment-status-enums">Appendix G: Payment Status Enums<a class="header-anchor" href="#appendix-g-payment-status-enums" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><code>SUCCESS</code>, <code>PENDING</code>, <code>FAILED</code>.</li>
+</ul>
+<h3 id="appendix-h-business-type-enums">Appendix H: Business Type Enums<a class="header-anchor" href="#appendix-h-business-type-enums" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><code>RETAIL</code> (Toko kelontong, minimarket, fashion).</li>
+<li><code>FNB</code> (Kedai kopi, restoran, warung makan, bakery).</li>
+<li><code>SERVICE</code> (Barbershop, laundry, salon, bengkel).</li>
+</ul>
+<h3 id="appendix-i-quick-folder-cheat-sheet">Appendix I: Quick Folder Cheat Sheet<a class="header-anchor" href="#appendix-i-quick-folder-cheat-sheet" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li>Logika UI Kasir: <code>src/components/pos/</code></li>
+<li>Konfigurasi Database: <code>src/db/index.ts</code></li>
+<li>State Global Transaksi: <code>src/context/POSContext.tsx</code></li>
+<li>Tipe Data: <code>src/types/index.ts</code></li>
+<li>Utilitas &amp; Enkripsi: <code>src/utils/</code></li>
+</ul>
+<h3 id="appendix-j-riwayat-versi-dokumen">Appendix J: Riwayat Versi Dokumen<a class="header-anchor" href="#appendix-j-riwayat-versi-dokumen" title="Tautan langsung ke seksi ini">#</a></h3>
+<ul>
+<li><strong>v1.0.0 (September 2026):</strong> Rilis perdana Kasirio Architecture Bible resmi (40 Bab Penuh, 21 Skema Tabel, 20 ADR, 25 RFC, Standar NFR &amp; Coding).</li>
+</ul>
+<hr>
+<blockquote>
+<p><strong>AKHIR DOKUMEN MASTER BLUEPRINT KASIRIO ARCHITECTURE BIBLE v1.0</strong><br><em>Dokumen ini merupakan properti teknis resmi proyek Kasirio. Seluruh implementasi kode wajib mengacu pada standar dokumen ini.</em></p>
+</blockquote>
+
+    </main>
+
+  </div>
+
+  <!-- Back to Top Button -->
+  <button class="back-to-top" id="back-to-top" title="Kembali ke atas">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+
+  <!-- Interactive Client Script -->
+  <script>
+    // Reading Progress Bar
+    window.addEventListener('scroll', () => {
+      const winScroll = document.documentElement.scrollTop;
+      const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      const scrolled = (winScroll / height) * 100;
+      document.getElementById('progress-bar').style.width = scrolled + '%';
+
+      // Back to top visibility
+      const backToTop = document.getElementById('back-to-top');
+      if (winScroll > 400) {
+        backToTop.classList.add('visible');
+      } else {
+        backToTop.classList.remove('visible');
+      }
+    });
+
+    document.getElementById('back-to-top').addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Dark / Light Theme Toggle
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeText = document.getElementById('theme-text');
+    const savedTheme = localStorage.getItem('kasirio_theme') || 'light';
+    
+    if (savedTheme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      themeText.textContent = 'Mode Terang';
+    }
+
+    themeToggle.addEventListener('click', () => {
+      const current = document.documentElement.getAttribute('data-theme');
+      if (current === 'dark') {
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('kasirio_theme', 'light');
+        themeText.textContent = 'Mode Gelap';
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('kasirio_theme', 'dark');
+        themeText.textContent = 'Mode Terang';
+      }
+    });
+
+    // Mobile Sidebar Toggle
+    const menuToggle = document.getElementById('menu-toggle');
+    const sidebar = document.getElementById('sidebar');
+    if (menuToggle) {
+      menuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+      });
+    }
+
+    // Live Search Filter for Sidebar TOC
+    const searchInput = document.getElementById('search-input');
+    const tocItemsList = document.querySelectorAll('.toc-item');
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      tocItemsList.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(query)) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+
+    // Auto Wrap Table with table-wrapper for Responsive Scroll
+    document.querySelectorAll('table').forEach(table => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'table-wrapper';
+      table.parentNode.insertBefore(wrapper, table);
+      wrapper.appendChild(table);
+    });
+  </script>
+</body>
+</html>

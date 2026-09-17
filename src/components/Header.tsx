@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePOS } from '../context/POSContext';
 import { formatDateIndo } from '../utils/formatters';
+import { SyncIndicator } from './pos/SyncIndicator';
 import {
   Menu,
   RotateCcw,
@@ -19,6 +20,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ onOpenShiftModal }) => {
   const {
     activeTab,
+    setActiveTab,
     activeShift,
     setIsScannerOpen,
     resetDemoData,
@@ -46,6 +48,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShiftModal }) => {
         return 'Laporan Penjualan & Keuangan';
       case 'pengaturan':
         return 'Pengaturan Toko & Struk';
+      case 'backoffice':
+        return 'Remote Backoffice & Multi-Cabang';
       default:
         return 'Transaksi';
     }
@@ -101,12 +105,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShiftModal }) => {
           {/* Right Status Badges & Quick Tools */}
           <div className="flex items-center gap-2">
             
-            {/* Online Status Pill */}
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-50 border border-slate-200 text-[11px] font-medium text-slate-600">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <Wifi className="w-3 h-3 text-emerald-600" />
-              <span>Online</span>
-            </div>
+            {/* Dynamic Cloud Sync Indicator */}
+            <SyncIndicator onOpenSettings={() => setActiveTab('backoffice')} />
 
             {/* Barcode Scanner Tool */}
             <button

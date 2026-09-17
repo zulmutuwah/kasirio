@@ -1,4 +1,4 @@
-﻿import Dexie, { Table } from 'dexie';
+import Dexie, { Table } from 'dexie';
 import {
   AuditLogEntry,
   CashMovement,
@@ -11,6 +11,7 @@ import {
   StockLog,
   StoreSettings,
   SuspendedCart,
+  SyncMutation,
   Transaction,
   TransactionItem,
   User,
@@ -39,6 +40,7 @@ export class KasirioDexieDB extends Dexie {
   users!: Table<User, string>;
   settings!: Table<{ id: string; data: StoreSettings }, string>;
   koinAccount!: Table<{ id: string; data: KoinAccount }, string>;
+  syncQueue!: Table<SyncMutation, string>;
 
   constructor() {
     super('KasirioDatabase');
@@ -58,10 +60,51 @@ export class KasirioDexieDB extends Dexie {
       settings: 'id',
       koinAccount: 'id',
     });
+
+    this.version(3).stores({
+      products: 'id, sku, barcode, categoryId, name, sellPrice, stock, deletedAt',
+      categories: 'id, name',
+      transactions: 'id, date, paymentMethod, status, cashierName, total, isAuditFlagged',
+      transactionItems: 'id, transactionId, productId',
+      customers: 'id, name, phone, totalDebt',
+      debtLogs: 'id, customerId, date',
+      stockLogs: 'id, productId, type, date',
+      suspendedCarts: 'id, label, createdAt',
+      auditLogs: 'id, timestamp, type, cashierName',
+      cashMovements: 'id, type, date',
+      cashSessions: 'id, cashierId, status',
+      users: 'id, role',
+      settings: 'id',
+      koinAccount: 'id',
+      syncQueue: 'id, status, clientTimestamp, entityType',
+    });
   }
 }
 
 export const db = new KasirioDexieDB();
+
+/**
+ * Menambahkan mutasi ke Outbox Queue untuk disinkronkan ke cloud
+ */
+export async function queueMutation(
+  entityType: SyncMutation['entityType'],
+  action: SyncMutation['action'],
+  entityId: string,
+  payload: any
+): Promise<string> {
+  const mutation: SyncMutation = {
+    id: `mut-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`,
+    entityType,
+    action,
+    entityId,
+    payload,
+    clientTimestamp: new Date().toISOString(),
+    status: 'PENDING',
+    retryCount: 0,
+  };
+  await db.syncQueue.put(mutation);
+  return mutation.id;
+}
 
 /**
  * Meminta browser agar tidak menghapus IndexedDB secara sepihak (Storage Eviction Prevention)

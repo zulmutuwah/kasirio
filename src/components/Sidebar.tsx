@@ -8,7 +8,8 @@ import {
   Users,
   Store,
   ChevronLeft,
-  Keyboard
+  Keyboard,
+  Building2
 } from 'lucide-react';
 import { KeyboardShortcutsModal } from './shortcuts/KeyboardShortcutsModal';
 
@@ -58,6 +59,13 @@ export const Sidebar: React.FC = () => {
       label: 'Laporan Penjualan',
       icon: BarChart3,
       badge: null,
+    },
+    {
+      id: 'backoffice' as const,
+      label: 'Backoffice / Cabang',
+      icon: Building2,
+      badge: 'Cloud',
+      badgeColor: 'bg-emerald-600 text-white',
     },
     {
       id: 'pengaturan' as const,

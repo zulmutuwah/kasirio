@@ -20,6 +20,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { AiNotaOcrModal } from './AiNotaOcrModal';
+import { SmartReorderWidget } from './SmartReorderWidget';
 
 interface InventoryViewProps {
   isAddProductOpenExternal?: boolean;
@@ -45,9 +46,15 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
   const [productForStockAdj, setProductForStockAdj] = useState<Product | null>(null);
+  const [suggestedRestockQty, setSuggestedRestockQty] = useState<number | undefined>(undefined);
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [isOcrModalOpen, setIsOcrModalOpen] = useState(false);
   const [activeSubTab, setActiveSubTab] = useState<'katalog' | 'riwayatStok'>('katalog');
+
+  const handleOpenRestock = (prod: Product, suggestedQty: number) => {
+    setProductForStockAdj(prod);
+    setSuggestedRestockQty(suggestedQty);
+  };
 
   // Handle external modal trigger from header
   const isAddOpen = isAddModalOpen || !!isAddProductOpenExternal;
@@ -183,6 +190,13 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           </div>
         </div>
       </div>
+
+      {/* AI Smart Reorder Widget */}
+      <SmartReorderWidget
+        products={products}
+        stockLogs={stockLogs}
+        onOpenRestock={handleOpenRestock}
+      />
 
       {/* Subtab Toggle (Katalog vs Riwayat Stok) */}
       <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
@@ -442,7 +456,12 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       {/* Stock Adjustment Modal */}
       <StockAdjustmentModal
         product={productForStockAdj}
-        onClose={() => setProductForStockAdj(null)}
+        initialQuantity={suggestedRestockQty}
+        initialType="IN"
+        onClose={() => {
+          setProductForStockAdj(null);
+          setSuggestedRestockQty(undefined);
+        }}
       />
 
       {/* Category Manager Modal */}

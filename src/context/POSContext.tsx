@@ -1,5 +1,6 @@
-﻿import React, { createContext, useContext, useEffect, useState } from 'react';
-import { db, initDatabase } from '../db';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { db, initDatabase, queueMutation } from '../db';
+import { syncEngine } from '../utils/syncEngine';
 import {
   AuditLogEntry,
   CartItem,
@@ -31,8 +32,8 @@ interface Toast {
 
 interface POSContextType {
   // Navigation
-  activeTab: 'kasir' | 'produk' | 'pelanggan' | 'laporan' | 'pengaturan';
-  setActiveTab: (tab: 'kasir' | 'produk' | 'pelanggan' | 'laporan' | 'pengaturan') => void;
+  activeTab: 'kasir' | 'produk' | 'pelanggan' | 'laporan' | 'pengaturan' | 'backoffice';
+  setActiveTab: (tab: 'kasir' | 'produk' | 'pelanggan' | 'laporan' | 'pengaturan' | 'backoffice') => void;
 
   // Products
   products: Product[];
@@ -126,7 +127,7 @@ interface POSContextType {
 const POSContext = createContext<POSContextType | undefined>(undefined);
 
 export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activeTab, setActiveTab] = useState<'kasir' | 'produk' | 'pelanggan' | 'laporan' | 'pengaturan'>('kasir');
+  const [activeTab, setActiveTab] = useState<'kasir' | 'produk' | 'pelanggan' | 'laporan' | 'pengaturan' | 'backoffice'>('kasir');
 
   // Core Data States
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
@@ -255,14 +256,27 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setProducts((prev) => [newProduct, ...prev]);
     await db.products.add(newProduct);
+    await queueMutation('PRODUCT', 'CREATE', newProduct.id, newProduct);
+    syncEngine.syncNow();
     showToast(`Produk "${newProduct.name}" berhasil ditambahkan.`);
   };
 
   const updateProduct = async (id: string, updatedFields: Partial<Product>) => {
+    let fullUpdatedProduct: Product | undefined;
     setProducts((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...updatedFields } : p))
+      prev.map((p) => {
+        if (p.id === id) {
+          fullUpdatedProduct = { ...p, ...updatedFields };
+          return fullUpdatedProduct;
+        }
+        return p;
+      })
     );
     await db.products.update(id, updatedFields);
+    if (fullUpdatedProduct) {
+      await queueMutation('PRODUCT', 'UPDATE', id, fullUpdatedProduct);
+      syncEngine.syncNow();
+    }
     showToast('Data produk berhasil diperbarui.');
   };
 
@@ -270,6 +284,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const prod = products.find((p) => p.id === id);
     setProducts((prev) => prev.filter((p) => p.id !== id));
     await db.products.delete(id);
+    await queueMutation('PRODUCT', 'DELETE', id, { id });
+    syncEngine.syncNow();
     showToast(`Produk "${prod?.name || ''}" berhasil dihapus.`);
   };
 
@@ -299,6 +315,8 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     await db.products.update(productId, { stock: newStock });
     await db.stockLogs.add(log);
+    await queueMutation('STOCK_LOG', 'CREATE', log.id, log);
+    syncEngine.syncNow();
 
     showToast(`Stok ${targetProduct.name} disesuaikan menjadi ${newStock}.`);
   };
@@ -473,6 +491,15 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       notes,
     };
     await db.debtLogs.add(debtLog);
+    await queueMutation('DEBT_PAYMENT', 'CREATE', debtLog.id, {
+      id: debtLog.id,
+      customerId,
+      amount: amountPaid,
+      paymentMethod,
+      date: debtLog.date,
+      notes,
+    });
+    syncEngine.syncNow();
 
     if (activeShift && paymentMethod === 'TUNAI') {
       addCashMovement('IN', amountPaid, 'Pelunasan Kasbon', `Pembayaran kasbon dari pelanggan - ${notes || ''}`);
@@ -490,6 +517,7 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setAuditLogs((prev) => [newLog, ...prev]);
     await db.auditLogs.add(newLog);
+    await queueMutation('AUDIT_LOG', 'CREATE', newLog.id, newLog);
   };
 
   // Process Checkout
@@ -586,6 +614,9 @@ export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // 3. Save Transaction
     setTransactions((prev) => [newTransaction, ...prev]);
     await db.transactions.add(newTransaction);
+    await queueMutation('TRANSACTION', 'CREATE', newTransaction.id, newTransaction);
+    syncEngine.refreshPendingCount();
+    syncEngine.syncNow();
 
     // 4. Audit Log for manual discount
     if (cartOrderDiscount > 0) {

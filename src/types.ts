@@ -195,6 +195,27 @@ export interface StoreSettings {
   qrisMerchantName?: string;
   bankAccountInfo?: string;
   soundboxEnabled: boolean;
+  cloudSyncEnabled?: boolean;
+  apiBaseUrl?: string;
+  tenantId?: string;
+  tenantName?: string;
+  outletId?: string;
+  outletName?: string;
+  authToken?: string;
+  deviceId?: string;
+  lastSyncTimestamp?: string;
+}
+
+export interface SyncMutation {
+  id: string;
+  entityType: 'TRANSACTION' | 'PRODUCT' | 'STOCK_LOG' | 'CUSTOMER' | 'DEBT_PAYMENT' | 'AUDIT_LOG';
+  action: 'CREATE' | 'UPDATE' | 'DELETE';
+  entityId: string;
+  payload: any;
+  clientTimestamp: string;
+  status: 'PENDING' | 'SYNCING' | 'FAILED' | 'SYNCED';
+  retryCount: number;
+  errorMessage?: string;
 }
 
 export interface StockLog {
@@ -208,4 +229,28 @@ export interface StockLog {
   notes: string;
   date: string;
 }
+
+export interface SmartReorderRecommendation {
+  productId: string;
+  productName: string;
+  sku: string;
+  unit: string;
+  currentStock: number;
+  minStock: number;
+  averageDailySales: number; // Kuantitas terjual rata-rata per hari
+  daysUntilStockout: number; // Estimasi hari tersisa sebelum stok habis
+  urgency: 'CRITICAL' | 'WARNING' | 'SAFE'; // <2 hari: CRITICAL, 2-5 hari: WARNING, >5 hari: SAFE
+  suggestedReorderQty: number; // Formula: (DailySales * TargetDaysCoverage) + SafetyStock - CurrentStock
+  estimatedCost: number; // suggestedReorderQty * buyPrice
+  aiNarrative?: string; // Narasi rekomendasi kulakan cerdas
+}
+
+export interface SalesForecastItem {
+  date: string;
+  dayName: string;
+  projectedSales: number;
+  projectedRevenue: number;
+  topTrendProducts: string[];
+}
+
 

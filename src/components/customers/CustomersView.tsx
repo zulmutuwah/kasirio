@@ -12,7 +12,9 @@ import {
   Phone,
   MapPin,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Send,
+  MessageSquare
 } from 'lucide-react';
 
 interface CustomersViewProps {
@@ -24,7 +26,8 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
   isAddExternalOpen,
   onCloseAddExternal,
 }) => {
-  const { customers, transactions, setSelectedCustomer, setActiveTab } = usePOS();
+  const { customers, transactions, setSelectedCustomer, setActiveTab, settings, showToast } = usePOS();
+  const [sendingDebtId, setSendingDebtId] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [showDebtOnly, setShowDebtOnly] = useState(false);
@@ -46,6 +49,37 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
   });
 
   const totalAllDebt = customers.reduce((acc, c) => acc + c.totalDebt, 0);
+
+  const handleSendDebtReminder = async (customer: Customer) => {
+    if (!customer.phone) {
+      showToast(`Pelanggan ${customer.name} belum memiliki nomor telepon.`, 'error');
+      return;
+    }
+
+    setSendingDebtId(customer.id);
+    const baseUrl = settings.apiBaseUrl || 'http://localhost:3001';
+    try {
+      const res = await fetch(`${baseUrl}/api/notifications/whatsapp/debt-reminder`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: customer.phone,
+          customerName: customer.name,
+          storeName: settings.storeName,
+          totalDebt: customer.totalDebt,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Gagal mengirim pengingat');
+
+      showToast(`Pengingat kasbon berhasil dikirim ke WhatsApp ${customer.name}!`, 'success');
+    } catch (err: any) {
+      showToast(err.message, 'error');
+    } finally {
+      setSendingDebtId(null);
+    }
+  };
 
   return (
     <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-950 space-y-5">
@@ -171,12 +205,26 @@ export const CustomersView: React.FC<CustomersViewProps> = ({
 
                   <div className="flex gap-2">
                     {hasDebt ? (
-                      <button
-                        onClick={() => setSelectedCustomerForDebt(customer)}
-                        className="px-3 py-1.5 bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-bold rounded-xl shadow"
-                      >
-                        Bayar Kasbon
-                      </button>
+                      <>
+                        <button
+                          onClick={() => handleSendDebtReminder(customer)}
+                          disabled={sendingDebtId === customer.id}
+                          className="px-2.5 py-1.5 bg-emerald-950 hover:bg-emerald-900 border border-emerald-800 text-emerald-300 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                          title="Kirim Pesan Pengingat Tagihan via WhatsApp API"
+                        >
+                          <Send className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="hidden sm:inline">
+                            {sendingDebtId === customer.id ? 'Mengirim...' : 'Ingatkan WA'}
+                          </span>
+                        </button>
+
+                        <button
+                          onClick={() => setSelectedCustomerForDebt(customer)}
+                          className="px-3 py-1.5 bg-teal-500 hover:bg-teal-400 text-slate-950 text-xs font-bold rounded-xl shadow"
+                        >
+                          Bayar Kasbon
+                        </button>
+                      </>
                     ) : (
                       <button
                         onClick={() => {

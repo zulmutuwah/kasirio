@@ -5,6 +5,63 @@ Format penulisan mengikuti standar [Keep a Changelog](https://keepachangelog.com
 
 ---
 
+## [1.2.0] - 2026-09-17
+### Added - FASE 4: Native Wrappers & AI Prediktif
+- **Sub-Fase 4a — Native Wrappers & Unified Hardware Bridge:**
+  - Konfigurasi Mobile Android/iOS (`capacitor.config.ts`): App ID `id.kasirio.pos`, App Name `Kasirio POS`, aset web `dist/`.
+  - Konfigurasi Desktop Windows/macOS/Linux (`src-tauri/tauri.conf.json`): Ukuran default 1280x800, port lokal 3000, build hooks otomatis.
+  - Abstraksi Hardware Bridge terpadu [`hardwareBridge.ts`](src/utils/hardwareBridge.ts): deteksi transparan platform Web vs Tauri vs Capacitor, abstraction printing ESC/POS thermal printer (58mm/80mm), perintah pulse buka laci kasir (`openCashDrawer`), dan fallback aman ke browser dialog.
+  - Integrasi hardware bridge pada [`ReceiptModal.tsx`](src/components/pos/ReceiptModal.tsx).
+  - Skrip runner build & dev native di `package.json` (`desktop:dev`, `desktop:build`, `mobile:sync`).
+- **Sub-Fase 4b — AI Smart Reorder Point & Prediksi Stok Toko:**
+  - Mesin analitik matematis [`calculateReorderMetrics`](src/server/routes/aiReorderRoutes.ts): menghitung kecepatan penjualan harian (*Daily Sales Velocity*), estimasi hari tersisa sebelum kehabisan stok (*Days Until Stockout*), klasifikasi urgensi (`CRITICAL` <2 hari, `WARNING` 2-5 hari, `SAFE` >5 hari), kuantitas saran kulakan, dan estimasi modal kulakan (Rp).
+  - Endpoint REST API Express: `POST /api/ai/smart-reorder` (dengan narasi cerdas Gemini 2.5 Flash / Smart Heuristic Fallback bahasa Indonesia) dan `GET /api/ai/sales-forecast` (proyeksi tren omzet 7 hari ke depan).
+  - Komponen UI Cerdas [`SmartReorderWidget.tsx`](src/components/inventory/SmartReorderWidget.tsx) di halaman Produk & Stok [`InventoryView.tsx`](src/components/inventory/InventoryView.tsx): kartu ringkasan KPI urgensi stok, bubble analisis narasi AI, filter urgensi, dan tombol 1-klik *"Restock Cepat"* yang otomatis mengisi kuantitas rekomendasi ke dalam modal penyesuaian stok.
+  - Dukungan pre-fill `initialQuantity` dan `initialType="IN"` pada [`StockAdjustmentModal.tsx`](src/components/inventory/StockAdjustmentModal.tsx).
+- **Automated Test Suite:**
+  - Penambahan 2 test suite baru: `src/tests/hardwareBridge.test.ts` dan `src/tests/smartReorder.test.ts`.
+  - Total **11 test suites (43 unit tests)** Vitest lulus 100%.
+
+## [1.1.0] - 2026-09-17
+### Added - FASE 3: Pembayaran Otomatis & Komunikasi
+- **Sub-Fase 3a — QRIS Dinamis & Webhook Auto-Detection:**
+  - Endpoint pembuat tagihan QRIS dinamis (`/api/payment/qris/create`) dengan standar EMVCo/ASPI ber-nominal pas sesuai total belanja kasir.
+  - Listener webhook pembayaran resmi (`/api/payment/webhook`) yang kompatibel dengan format notifikasi Midtrans dan Xendit.
+  - Endpoint status polling real-time (`/api/payment/qris/status/:orderId`) dan simulator webhook sandbox (`/api/payment/simulate-webhook`).
+  - Antarmuka kasir [`PaymentModal.tsx`](src/components/pos/PaymentModal.tsx) dengan visual `QRCodeSVG`, countdown timer kedaluwarsa (5 menit), status polling real-time, dan auto-checkout saat pembayaran berhasil tanpa klik manual.
+- **Sub-Fase 3b — Virtual Soundbox Berbasis Webhook:**
+  - Modul audio cerdas [`soundbox.ts`](src/utils/soundbox.ts): nada lonceng synthesizer ganda (Web Audio API oscillator C6 & G6) dan sintesis vokal Bahasa Indonesia (Web Speech API) yang mengumumkan nominal: *"Pembayaran QRIS sebesar [Nominal Rupiah] berhasil diterima!"*.
+  - Menghilangkan kebutuhan perangkat soundbox fisik terpisah bagi UMKM.
+- **Sub-Fase 3c — Notifikasi WhatsApp Official API:**
+  - Endpoint pengiriman struk digital resmi (`/api/notifications/whatsapp/receipt`) dengan layout teks nota faktur rapi, rincian barang, total, dan nama kasir.
+  - Endpoint pengingat kasbon ramah UMKM (`/api/notifications/whatsapp/debt-reminder`) dengan rincian sisa tagihan dan tanggal jatuh tempo.
+  - Integrasi tombol aksi cepat pada [`ReceiptModal.tsx`](src/components/pos/ReceiptModal.tsx) (Kirim Struk WA Otomatis) dan [`CustomersView.tsx`](src/components/customers/CustomersView.tsx) (Ingatkan Kasbon WA).
+- **Automated Test Suite:**
+  - Penambahan 2 test suite baru: `src/tests/payment.test.ts` dan `src/tests/notifications.test.ts`. Total 35 unit test Vitest lulus 100%.
+
+## [1.0.0] - 2026-09-17
+### Added - FASE 2: Backend Cloud, Multi-Device Sync & Remote Owner Dashboard
+- **Sub-Fase 2a — Backend API & Database Multi-Tenant (PostgreSQL + Prisma):**
+  - Skema database multi-tenant komprehensif (`prisma/schema.prisma` dan `schema.postgresql.prisma`): `Tenant`, `Outlet`, `User`, `Product`, `Category`, `Transaction`, `TransactionItem`, `StockLog`, `Customer`, `DebtPaymentLog`, `CashSession`, `AuditLog`, dan `SyncMutationLog`.
+  - Otentikasi JWT berjenjang dan otorisasi Role-Based Access Control (RBAC): peran `OWNER`, `MANAGER`, dan `CASHIER`.
+  - Hashing kata sandi dan PIN kasir berbasis `bcryptjs`.
+  - REST API terpadu: `/api/auth/register-tenant`, `/api/auth/login`, `/api/auth/verify-pin`, `/api/auth/me`.
+- **Sub-Fase 2b — Cloud Sync Engine & Offline Outbox Queue:**
+  - Peningkatan skema Dexie ke versi 3 dengan tabel `syncQueue`.
+  - Outbox Mutation Engine (`queueMutation`): pencatatan otomatis transaksi, penyesuaian stok ledger, katalog produk, pelunasan kasbon, dan audit log ke antrean lokal saat kasir offline.
+  - Delta Synchronization (`/api/sync/pull` dan `/api/sync/push`): sinkronisasi selisih efisien berbasis `lastSyncTimestamp` tanpa transfer data berlebih.
+  - Komponen visual `SyncIndicator` di header kasir dengan status koneksi (Online/Offline/Syncing/Error), jumlah antrean outbox, popover info, dan pemicu manual sinkronisasi.
+- **Sub-Fase 2c — Remote Owner Dashboard & Backoffice Web:**
+  - Modul Backoffice Web (`OwnerDashboardView.tsx`) khusus pemilik toko untuk memantau omzet harian/mingguan dari HP atau laptop jarak jauh.
+  - Metrik Konsolidasian: Omzet gabungan seluruh cabang, Laba Kotor (Gross Profit), Margin Laba, dan Rata-rata Nilai Keranjang.
+  - Manajemen Multi-Outlet & *Branch Switcher*: filter laporan per cabang toko dan pembukaan cabang baru.
+  - Alur *Stock Transfer Orders*: pemindahan stok antar-gudang dan cabang toko dengan pencatatan mutasi ledger otomatis.
+- **Sub-Fase 2d — Refactor Modular Stores (Zustand):**
+  - Dekomposisi state global ke store modular terisolasi: `useCartStore`, `useCatalogStore`, `useSessionStore`, dan `useSyncStore`.
+  - Peningkatan reaktivitas dan isolasi logic transaksi kasir.
+- **Automated Test Suite:**
+  - Penambahan 3 test suite baru: `src/tests/auth.test.ts`, `src/tests/syncEngine.test.ts`, dan `src/tests/stores.test.ts`. Total 31 unit test Vitest lulus 100%.
+
 ## [0.3.0] - 2026-09-17
 ### Added - Sub-Fase 1c (AI & Monetisasi Terbimbing)
 - **Backend Proxy Tipis Gemini AI (`server.ts` & `/api/parse-nota`):** Panggilan multimodal vision Gemini dialihkan ke backend proxy Express lokal agar `GEMINI_API_KEY` tidak bocor ke browser client bundle publik, dilengkapi fallback cerdas offline.

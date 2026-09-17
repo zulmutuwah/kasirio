@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePOS } from '../../context/POSContext';
 import { PaymentMethod } from '../../types';
 import { formatRupiah } from '../../utils/formatters';
+import { soundbox } from '../../utils/soundbox';
+import { QRCodeSVG } from 'qrcode.react';
 import {
   Banknote,
   Building2,
@@ -12,7 +14,10 @@ import {
   X,
   AlertTriangle,
   Copy,
-  Check
+  Check,
+  Clock,
+  RefreshCw,
+  Sparkles
 } from 'lucide-react';
 
 interface PaymentModalProps {
@@ -41,6 +46,16 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
   const [copiedBank, setCopiedBank] = useState<boolean>(false);
   const [qrisVerified, setQrisVerified] = useState<boolean>(false);
 
+  // Dynamic QRIS states
+  const [qrisOrder, setQrisOrder] = useState<{
+    orderId: string;
+    qrisString: string;
+    expiresAt: number;
+  } | null>(null);
+  const [isCreatingQris, setIsCreatingQris] = useState(false);
+  const [qrisTimeLeft, setQrisTimeLeft] = useState<number>(300);
+  const [isSimulatingPayment, setIsSimulatingPayment] = useState(false);
+
   if (!isOpen) return null;
 
   // Calculate Total
@@ -57,6 +72,105 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
 
   const taxAmount = settings.enableTax ? (subtotal * settings.taxPercentage) / 100 : 0;
   const grandTotal = Math.max(0, subtotal + taxAmount - cartOrderDiscount);
+
+  // Dynamic QRIS Creation & Auto-Detection Polling
+  useEffect(() => {
+    let countdownTimer: any;
+    let pollTimer: any;
+
+    if (isOpen && paymentMethod === 'QRIS' && grandTotal > 0) {
+      let isMounted = true;
+      setIsCreatingQris(true);
+      setQrisVerified(false);
+
+      const baseUrl = settings.apiBaseUrl || 'http://localhost:3001';
+      fetch(`${baseUrl}/api/payment/qris/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: grandTotal,
+          customerName: selectedCustomer?.name,
+          merchantName: settings.qrisMerchantName || settings.storeName,
+        }),
+      })
+        .then((r) => r.json())
+        .then((data) => {
+          if (!isMounted) return;
+          setIsCreatingQris(false);
+          if (data.success) {
+            setQrisOrder({
+              orderId: data.orderId,
+              qrisString: data.qrisString,
+              expiresAt: data.expiresAt,
+            });
+            const initialSeconds = Math.max(0, Math.floor((data.expiresAt - Date.now()) / 1000));
+            setQrisTimeLeft(initialSeconds);
+
+            countdownTimer = setInterval(() => {
+              setQrisTimeLeft((prev) => (prev <= 1 ? 0 : prev - 1));
+            }, 1000);
+
+            pollTimer = setInterval(async () => {
+              try {
+                const statusRes = await fetch(`${baseUrl}/api/payment/qris/status/${data.orderId}`);
+                const statusData = await statusRes.json();
+                if (statusData.status === 'PAID') {
+                  clearInterval(pollTimer);
+                  clearInterval(countdownTimer);
+                  setQrisVerified(true);
+
+                  if (settings.soundboxEnabled) {
+                    soundbox.announcePayment(grandTotal, 'QRIS');
+                  }
+
+                  showToast(`Pembayaran QRIS ${formatRupiah(grandTotal)} Berhasil Diterima!`, 'success');
+
+                  setTimeout(() => {
+                    processCheckout('QRIS', grandTotal, transactionNotes);
+                    onClose();
+                  }, 1200);
+                }
+              } catch (e) {
+                // Ignore network blips during polling
+              }
+            }, 1500);
+          }
+        })
+        .catch((err) => {
+          if (isMounted) setIsCreatingQris(false);
+          console.warn('[QRIS Setup Error]', err);
+        });
+
+      return () => {
+        isMounted = false;
+        if (countdownTimer) clearInterval(countdownTimer);
+        if (pollTimer) clearInterval(pollTimer);
+      };
+    }
+  }, [isOpen, paymentMethod, grandTotal]);
+
+  const handleSimulateWebhook = async () => {
+    if (!qrisOrder) return;
+    setIsSimulatingPayment(true);
+    const baseUrl = settings.apiBaseUrl || 'http://localhost:3001';
+    try {
+      await fetch(`${baseUrl}/api/payment/simulate-webhook`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderId: qrisOrder.orderId }),
+      });
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSimulatingPayment(false);
+    }
+  };
+
+  const formatTimer = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const parsedAmountPaid = Number(amountPaidInput.replace(/\D/g, '')) || 0;
   const change = Math.max(0, parsedAmountPaid - grandTotal);
@@ -313,46 +427,95 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
           )}
 
-          {/* 2. QRIS */}
+          {/* 2. QRIS DINAMIS & WEBHOOK AUTO-DETECT */}
           {paymentMethod === 'QRIS' && (
             <div className="bg-slate-850 p-4 rounded-xl border border-slate-800 text-center space-y-3">
-              <p className="text-xs text-slate-300 font-medium">
-                Tunjukkan QRIS kepada Pembeli untuk di-scan via GoPay, OVO, ShopeePay, DANA, BCA Mobile dll.
-              </p>
-
-              {/* Simulated QR Code Box */}
-              <div className="bg-white p-4 rounded-xl inline-block shadow-inner mx-auto">
-                <div className="w-44 h-44 bg-slate-950 p-2 rounded flex flex-col items-center justify-center relative">
-                  <QrCode className="w-36 h-36 text-white" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-white px-2 py-0.5 rounded text-[9px] font-black tracking-widest text-slate-900 border border-slate-300">
-                      QRIS
-                    </div>
-                  </div>
-                </div>
-                <p className="text-[11px] font-bold text-slate-900 mt-2">
-                  {settings.qrisMerchantName || 'TOKO SEJAHTERA POS'}
-                </p>
-                <p className="text-[10px] text-slate-600 font-mono">{formatRupiah(grandTotal)}</p>
+              <div className="flex items-center justify-between px-2">
+                <span className="text-xs text-slate-300 font-medium">
+                  QRIS Dinamis Nasional (ASPI / BI)
+                </span>
+                <span className={`px-2 py-0.5 rounded-full text-[11px] font-mono font-bold flex items-center gap-1 ${
+                  qrisTimeLeft <= 60 ? 'bg-rose-950 text-rose-300 border border-rose-800 animate-pulse' : 'bg-slate-800 text-slate-300 border border-slate-700'
+                }`}>
+                  <Clock className="w-3 h-3 text-amber-400" />
+                  <span>{formatTimer(qrisTimeLeft)}</span>
+                </span>
               </div>
 
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setQrisVerified(true)}
-                  className={`text-xs px-3 py-1.5 rounded-lg border font-medium inline-flex items-center gap-1.5 transition-colors ${
-                    qrisVerified
-                      ? 'bg-emerald-950 text-emerald-300 border-emerald-700'
-                      : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
-                  }`}
-                >
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                  <span>
-                    {qrisVerified
-                      ? 'Status: Pembayaran Terverifikasi Instan'
-                      : 'Simulasi Cek Status QRIS (Lunas)'}
-                  </span>
-                </button>
+              {/* Dynamic QR Code Box */}
+              <div className="bg-white p-4 rounded-2xl inline-block shadow-xl mx-auto border-2 border-emerald-500/30">
+                {isCreatingQris ? (
+                  <div className="w-44 h-44 flex flex-col items-center justify-center gap-2 text-slate-600">
+                    <RefreshCw className="w-8 h-8 animate-spin text-emerald-600" />
+                    <span className="text-[11px] font-semibold">Menyiapkan QRIS...</span>
+                  </div>
+                ) : qrisOrder?.qrisString ? (
+                  <div className="relative p-1 bg-white rounded-xl">
+                    <QRCodeSVG
+                      value={qrisOrder.qrisString}
+                      size={176}
+                      level="M"
+                      includeMargin={false}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <div className="bg-white px-2 py-0.5 rounded text-[9px] font-black tracking-widest text-slate-900 border border-slate-300 shadow-md">
+                        QRIS
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-44 h-44 bg-slate-950 p-2 rounded flex flex-col items-center justify-center relative">
+                    <QrCode className="w-36 h-36 text-white" />
+                  </div>
+                )}
+                
+                <p className="text-[11px] font-extrabold text-slate-900 mt-2">
+                  {settings.qrisMerchantName || settings.storeName || 'KASIRIO POS'}
+                </p>
+                <p className="text-xs font-black text-emerald-600 font-mono">
+                  {formatRupiah(grandTotal)}
+                </p>
+              </div>
+
+              {/* Auto-Detection Status Indicator */}
+              <div className="space-y-2">
+                <div className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition-all ${
+                  qrisVerified
+                    ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700 animate-pulse'
+                    : 'bg-slate-900 text-slate-300 border-slate-700'
+                }`}>
+                  {qrisVerified ? (
+                    <>
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                      <span>Pembayaran Terverifikasi Webhook! Memproses nota...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="relative flex h-2.5 w-2.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
+                      </span>
+                      <span>Menunggu Notifikasi Pembayaran dari Bank / e-Wallet...</span>
+                    </>
+                  )}
+                </div>
+
+                {/* Sandbox / Testing Simulator Button */}
+                {!qrisVerified && qrisOrder && (
+                  <button
+                    type="button"
+                    onClick={handleSimulateWebhook}
+                    disabled={isSimulatingPayment}
+                    className="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    {isSimulatingPayment ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-400" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    )}
+                    <span>Simulasikan Pembeli Scan & Bayar (Webhook Sandbox)</span>
+                  </button>
+                )}
               </div>
             </div>
           )}
