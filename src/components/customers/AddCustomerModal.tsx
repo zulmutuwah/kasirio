@@ -19,7 +19,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name.trim()) {
@@ -27,7 +27,7 @@ export const AddCustomerModal: React.FC<AddCustomerModalProps> = ({
       return;
     }
 
-    const newCust = addCustomer({
+    const newCust = await addCustomer({
       name: name.trim(),
       phone: phone.trim() || '-',
       address: address.trim(),

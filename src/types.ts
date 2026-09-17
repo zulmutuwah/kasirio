@@ -31,6 +31,29 @@ export interface Product {
   variants?: ProductVariant[];
   description?: string;
   barcode?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string; // Soft-delete
+}
+
+export interface User {
+  id: string;
+  name: string;
+  role: 'OWNER' | 'CASHIER';
+  pinHash: string;
+  createdAt: string;
+}
+
+export interface CashSession {
+  id: string;
+  cashierId: string;
+  cashierName: string;
+  startTime: string;
+  endTime?: string;
+  initialCash: number;
+  finalCash?: number;
+  expectedCash?: number;
+  status: 'OPEN' | 'CLOSED';
 }
 
 export interface CartItem {
@@ -72,6 +95,8 @@ export interface DebtPaymentLog {
 }
 
 export interface TransactionItem {
+  id?: string;
+  transactionId?: string;
   productId: string;
   productName: string;
   sku: string;
