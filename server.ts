@@ -8,6 +8,7 @@ import { backofficeRouter } from './src/server/routes/backofficeRoutes';
 import { paymentRouter } from './src/server/routes/paymentRoutes';
 import { notificationRouter } from './src/server/routes/notificationRoutes';
 import { aiReorderRouter } from './src/server/routes/aiReorderRoutes';
+import { userRouter } from './src/server/routes/userRoutes';
 
 dotenv.config();
 
@@ -19,6 +20,7 @@ app.use(express.json({ limit: '15mb' }));
 
 // Daftarkan rute API Fase 2, Fase 3 & Fase 4
 app.use('/api/auth', authRouter);
+app.use('/api/users', userRouter);
 app.use('/api/sync', syncRouter);
 app.use('/api/backoffice', backofficeRouter);
 app.use('/api/payment', paymentRouter);

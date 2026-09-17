@@ -5,6 +5,31 @@ Format penulisan mengikuti standar [Keep a Changelog](https://keepachangelog.com
 
 ---
 
+## [1.3.0] - 2026-09-17
+### Added - Sistem Role & Permission Multi-Tenant (RBAC & PBAC)
+- **Kepatuhan Dokumen Acuan Resmi (`docs/KASIRIO_ROLE_PERMISSION_AGENT_PROMPT_v1.0.md`):**
+  - Pemisahan ketat: skema lokal Dexie Fase 1 (`src/db/index.ts` & `src/types.ts`) tetap terjaga utuh tanpa modifikasi.
+  - Implementasi hierarki 5 role resmi pada lapisan backend/cloud: `DEVELOPER`, `SUPER_ADMIN` (Platform), `OWNER`, `ADMIN` (Admin Toko), dan `CASHIER` (Kasir).
+  - Skema database Prisma SQLite & PostgreSQL diperbarui dengan model `UserPermissionOverride` ber-scope `(userId, tenantId, outletId)`.
+  - Pelacakan audit transparan pada `AuditLog` dengan `actorRole` dan `actorId` untuk mencatat setiap interaksi platform staff terhadap tenant.
+- **Engine Resolusi Permission & Overrides (`src/server/auth.ts`):**
+  - Katalog izin terstandarisasi: katalog (`product.*`), stok (`stock.*`), transaksi (`transaction.*`), kasir (`cashSession.*`, `drawer.kick`), laporan (`report.view`), dan manajemen (`user.manage`).
+  - Resolusi izin matematis: *(Default Permissions Role)* + *(Grant Override)* − *(Revoke Override)*.
+  - Proteksi integritas Owner: akun Pemilik Toko selalu mempertahankan izin penuh dan tidak dapat dicabut haknya.
+- **REST API Manajemen Karyawan (`src/server/routes/userRoutes.ts`):**
+  - `GET /api/users`: Daftar staf toko dengan resolved permissions dan jumlah override.
+  - `POST /api/users`: Pendaftaran karyawan baru dengan validasi role (`ADMIN` / `CASHIER`), scoping cabang, dan hashing PIN kasir.
+  - `PUT /api/users/:id`: Edit profil, peran, dan cabang karyawan.
+  - `DELETE /api/users/:id`: Hapus akun karyawan dengan proteksi mutlak (akun Owner dilarang dihapus).
+  - `GET /api/users/:id/permissions`: Inspeksi izin default dan daftar override aktif.
+  - `POST /api/users/:id/permissions/override`: Pemasangan override `GRANT` atau `REVOKE`.
+- **Antarmuka UI Owner Backoffice (`OwnerDashboardView.tsx`):**
+  - Sub-tab baru **"Manajemen Staf & Hak Akses"** dengan ringkasan hierarki role dan daftar karyawan aktif.
+  - Modal **Tambah / Edit Karyawan** dengan pemilihan peran, penugasan cabang toko, dan PIN kasir.
+  - Modal **Kustomisasi Hak Akses (Permission Overrides Matrix)** dengan tombol aksi interaktif Grant / Revoke / Reset per item izin.
+- **Automated Test Suite:**
+  - Penambahan test suite baru `src/tests/rolePermissions.test.ts`. Total **12 test suites (49 unit tests)** Vitest lulus 100%.
+
 ## [1.2.0] - 2026-09-17
 ### Added - FASE 4: Native Wrappers & AI Prediktif
 - **Sub-Fase 4a — Native Wrappers & Unified Hardware Bridge:**

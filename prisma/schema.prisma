@@ -27,6 +27,7 @@ model Tenant {
   cashSessions CashSession[]
   auditLogs    AuditLog[]
   syncLogs     SyncMutationLog[]
+  permissionOverrides UserPermissionOverride[]
 }
 
 model Outlet {
@@ -47,6 +48,7 @@ model Outlet {
   cashSessions CashSession[]
   auditLogs    AuditLog[]
   syncLogs     SyncMutationLog[]
+  permissionOverrides UserPermissionOverride[]
 
   @@index([tenantId])
 }
@@ -60,13 +62,14 @@ model User {
   phone        String?
   passwordHash String?
   pinHash      String      // Hashed PIN untuk otorisasi POS
-  role         String      @default("CASHIER") // OWNER | MANAGER | CASHIER
+  role         String      @default("CASHIER") // DEVELOPER | SUPER_ADMIN | OWNER | ADMIN | CASHIER
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
 
   tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   outlet       Outlet?     @relation(fields: [outletId], references: [id])
   cashSessions CashSession[]
+  permissionOverrides UserPermissionOverride[]
 
   @@index([tenantId])
   @@index([outletId])
@@ -244,9 +247,11 @@ model AuditLog {
   tenantId    String
   outletId    String?
   timestamp   DateTime @default(now())
-  type        String   // VOID_TRANSACTION | LARGE_DISCOUNT | DRAWER_OPEN | MANUAL_SYNC | LOGIN
+  type        String   // VOID_TRANSACTION | LARGE_DISCOUNT | DRAWER_OPEN | MANUAL_SYNC | LOGIN | PLATFORM_ACCESS
   details     String
   cashierName String
+  actorRole   String?  // DEVELOPER | SUPER_ADMIN | OWNER | ADMIN | CASHIER
+  actorId     String?  // ID pelaksana aksi
 
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   outlet      Outlet?  @relation(fields: [outletId], references: [id])
@@ -273,4 +278,23 @@ model SyncMutationLog {
   @@index([tenantId])
   @@index([outletId])
   @@index([serverTimestamp])
+}
+
+model UserPermissionOverride {
+  id         String   @id @default(uuid())
+  userId     String
+  tenantId   String
+  outletId   String?  // null = all outlets in tenant
+  permission String   // e.g. product.delete, stock.adjust, transaction.refund
+  type       String   // GRANT | REVOKE
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  outlet     Outlet?  @relation(fields: [outletId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tenantId])
+  @@index([outletId])
 }
