@@ -2,6 +2,16 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { GoogleGenAI } from '@google/genai';
+
+// Rute Resmi Blueprint v1.0
+import { appAuthRouter } from './src/server/routes/app/appAuthRoutes';
+import { posSyncRouter } from './src/server/routes/app/posSyncRoutes';
+import { adminRouter } from './src/server/routes/app/adminRoutes';
+import { officeAuthRouter } from './src/server/routes/office/officeAuthRoutes';
+import { officeRouter } from './src/server/routes/office/officeOperationsRoutes';
+import { jobRouter } from './src/server/routes/internal/jobRoutes';
+
+// Rute Legacy (Fase 1/2 kompatibilitas)
 import { authRouter } from './src/server/routes/authRoutes';
 import { syncRouter } from './src/server/routes/syncRoutes';
 import { backofficeRouter } from './src/server/routes/backofficeRoutes';
@@ -15,10 +25,43 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-app.use(cors());
+// Blueprint Bagian 1: CORS di api.kasirio.com hanya mengizinkan origin eksplisit tanpa wildcard
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'https://app.kasirio.com',
+  'https://office.kasirio.com',
+];
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Izinkan tools non-browser (misal curl / postman / mobile app) atau origin terdaftar
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origin '${origin}' tidak diizinkan oleh kebijakan CORS api.kasirio.com`));
+      }
+    },
+    credentials: true,
+  })
+);
+
 app.use(express.json({ limit: '15mb' }));
 
-// Daftarkan rute API Fase 2, Fase 3 & Fase 4
+// ============================================================================
+// DAFTAR RUTE RESMI BLUEPRINT v1.0 (Namespaced per Audience & Realm)
+// ============================================================================
+app.use('/api/app/auth', appAuthRouter);
+app.use('/api/app/pos', posSyncRouter);
+app.use('/api/app/admin', adminRouter);
+app.use('/api/office/auth', officeAuthRouter);
+app.use('/api/office', officeRouter);
+app.use('/api/internal/jobs', jobRouter);
+
+// ============================================================================
+// DAFTAR RUTE LEGACY (Kompatibilitas ke Belakang)
+// ============================================================================
 app.use('/api/auth', authRouter);
 app.use('/api/users', userRouter);
 app.use('/api/sync', syncRouter);
@@ -31,8 +74,8 @@ app.use('/api/ai', aiReorderRouter);
 app.get('/', (req, res) => {
   res.send(`
     <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 60px auto; padding: 32px; background: #0f172a; color: #f8fafc; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-      <h2 style="color: #2dd4bf; margin-top: 0;">✅ Kasirio Backend API Aktif!</h2>
-      <p style="color: #94a3b8; line-height: 1.6;">Server backend proxy Express (Port 3001) sedang berjalan normal melayani QRIS, Webhook Soundbox, WhatsApp, Sync Cloud, dan AI Engine.</p>
+      <h2 style="color: #2dd4bf; margin-top: 0;">✅ Kasirio Cloud Backend API (Blueprint v1.0) Aktif!</h2>
+      <p style="color: #94a3b8; line-height: 1.6;">Server multi-tenant Express berjalan melayani App (/api/app/*) dan Office (/api/office/*) dengan isolasi realm, RLS support, dan live clock handshake.</p>
       <div style="margin-top: 24px;">
         <a href="http://localhost:3000" style="display: inline-block; background: #14b8a6; color: #020617; font-weight: bold; text-decoration: none; padding: 12px 24px; border-radius: 10px;">
           👉 Buka Aplikasi Kasir POS (localhost:3000)
@@ -46,6 +89,7 @@ app.get('/', (req, res) => {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
+    version: '1.0.0-blueprint',
     hasGeminiKey: !!process.env.GEMINI_API_KEY,
     timestamp: new Date().toISOString(),
   });
@@ -72,7 +116,6 @@ app.post('/api/parse-nota', async (req, res) => {
 
   if (!apiKey) {
     console.log('[Kasirio Proxy] GEMINI_API_KEY tidak disetel. Mengembalikan data simulasi mock nota pasar.');
-    // Simulated short delay for realism
     await new Promise((r) => setTimeout(r, 1200));
     return res.json({
       success: true,
@@ -84,7 +127,6 @@ app.post('/api/parse-nota', async (req, res) => {
 
   try {
     const ai = new GoogleGenAI({ apiKey });
-    // Remove data URL prefix if provided
     const cleanBase64 = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
 
     const prompt = `
@@ -104,12 +146,9 @@ app.post('/api/parse-nota', async (req, res) => {
       model: 'gemini-2.5-flash',
       contents: [
         {
-          inlineData: {
-            data: cleanBase64,
-            mimeType: mimeType,
-          },
+          role: 'user',
+          parts: [{ text: prompt }, { inlineData: { mimeType, data: cleanBase64 } }],
         },
-        prompt,
       ],
       config: {
         responseMimeType: 'application/json',
@@ -126,7 +165,7 @@ app.post('/api/parse-nota', async (req, res) => {
                   buyPrice: { type: 'NUMBER' },
                   unit: { type: 'STRING' },
                 },
-                required: ['name', 'quantity', 'buyPrice', 'unit'],
+                required: ['name', 'quantity', 'buyPrice'],
               },
             },
           },
@@ -135,18 +174,17 @@ app.post('/api/parse-nota', async (req, res) => {
       },
     });
 
-    const parsedJson = JSON.parse(response.text || '{"items":[]}');
+    const parsed = JSON.parse(response.text || '{"items":[]}');
     res.json({
       success: true,
-      mode: 'gemini-api',
-      items: parsedJson.items || [],
+      mode: 'live',
+      items: parsed.items || [],
     });
   } catch (error: any) {
-    console.error('[Kasirio Proxy] Error memanggil Gemini API:', error);
-    // Fallback to mock on API error so cashier is never blocked
-    res.json({
-      success: true,
-      mode: 'fallback-mock',
+    console.error('[Gemini OCR Error]:', error);
+    res.status(500).json({
+      success: false,
+      mode: 'error_fallback',
       items: getMockNotaItems(),
       warning: `Gemini API mengalami kendala (${error.message}). Ditampilkan data cadangan.`,
     });
@@ -203,7 +241,7 @@ app.post('/api/business-briefing', async (req, res) => {
 
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
-    console.log(`[Kasirio Backend Proxy] Server berjalan di http://localhost:${PORT}`);
+    console.log(`[Kasirio Cloud Backend] Server berjalan di http://localhost:${PORT}`);
   });
 }
 

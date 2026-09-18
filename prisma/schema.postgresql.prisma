@@ -14,45 +14,51 @@ model Tenant {
   id           String      @id @default(uuid())
   name         String
   slug         String      @unique
-  businessType String      @default("RETAIL") // RETAIL | FNB
+  businessType String      @default("RETAIL") @map("business_type") // RETAIL | FNB
   phone        String?
   address      String?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
 
-  outlets      Outlet[]
-  users        User[]
-  products     Product[]
-  categories   Category[]
-  transactions Transaction[]
-  stockLogs    StockLog[]
-  customers    Customer[]
-  cashSessions CashSession[]
-  auditLogs    AuditLog[]
-  syncLogs     SyncMutationLog[]
+  outlets             Outlet[]
+  users               User[]
+  products            Product[]
+  categories          Category[]
+  transactions        Transaction[]
+  stockLogs           StockLog[]
+  customers           Customer[]
+  cashSessions        CashSession[]
+  auditLogs           AuditLog[]
+  syncLogs            SyncMutationLog[]
   permissionOverrides UserPermissionOverride[]
+  subscriptions       Subscription[]
+  tenantOwnerships    TenantOwnership[]
+  authPolicy          TenantAuthPolicy?
+  payments            Payment[]
+  notificationLogs    NotificationLog[]
+  userSessions        UserSession[]
 
   @@map("tenants")
 }
 
 model Outlet {
   id           String      @id @default(uuid())
-  tenantId     String
+  tenantId     String      @map("tenant_id")
   name         String
   address      String?
   phone        String?
-  isMainBranch Boolean     @default(false)
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  isMainBranch Boolean     @default(false) @map("is_main_branch")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
 
-  tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  users        User[]
-  products     Product[]
-  transactions Transaction[]
-  stockLogs    StockLog[]
-  cashSessions CashSession[]
-  auditLogs    AuditLog[]
-  syncLogs     SyncMutationLog[]
+  tenant              Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users               User[]
+  products            Product[]
+  transactions        Transaction[]
+  stockLogs           StockLog[]
+  cashSessions        CashSession[]
+  auditLogs           AuditLog[]
+  syncLogs            SyncMutationLog[]
   permissionOverrides UserPermissionOverride[]
 
   @@index([tenantId])
@@ -61,33 +67,213 @@ model Outlet {
 
 model User {
   id           String      @id @default(uuid())
-  tenantId     String
-  outletId     String?
+  tenantId     String      @map("tenant_id")
+  outletId     String?     @map("outlet_id")
   name         String
   email        String?
   phone        String?
-  passwordHash String?
-  pinHash      String      // Hashed PIN untuk otorisasi POS
+  passwordHash String?     @map("password_hash")
+  pinHash      String      @map("pin_hash") // Hashed PIN untuk otorisasi POS
   role         String      @default("CASHIER") // DEVELOPER | SUPER_ADMIN | OWNER | ADMIN | CASHIER
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
 
-  tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  outlet       Outlet?     @relation(fields: [outletId], references: [id])
-  cashSessions CashSession[]
+  tenant              Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  outlet              Outlet?     @relation(fields: [outletId], references: [id])
+  cashSessions        CashSession[]
   permissionOverrides UserPermissionOverride[]
+  tenantOwnerships    TenantOwnership[]
+  userSessions        UserSession[]
 
   @@index([tenantId])
   @@index([outletId])
   @@map("users")
 }
 
+model Subscription {
+  id              String    @id @default(uuid())
+  tenantId        String    @map("tenant_id")
+  status          String    @default("TRIAL") // TRIAL | ACTIVE | GRACE | LIMITED | SUSPENDED
+  trialEndsAt     DateTime  @map("trial_ends_at")
+  graceEndsAt     DateTime? @map("grace_ends_at")
+  activeEndsAt    DateTime? @map("active_ends_at")
+  planType        String    @default("PRO") @map("plan_type")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  payments        Payment[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("subscriptions")
+}
+
+model TenantOwnership {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  tenantId    String   @map("tenant_id")
+  isPrimary   Boolean  @default(true) @map("is_primary")
+  billingType String   @default("PRIMARY") @map("billing_type") // PRIMARY | ADDITIONAL_TENANT
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tenantId])
+  @@index([userId])
+  @@index([tenantId])
+  @@map("tenant_ownerships")
+}
+
+model TenantAuthPolicy {
+  id                     String   @id @default(uuid())
+  tenantId               String   @unique @map("tenant_id")
+  manualDiscountMode     String   @default("THRESHOLD") @map("manual_discount_mode") // ALLOW | THRESHOLD | ALWAYS_PIN
+  manualDiscountPercent  Float    @default(10) @map("manual_discount_percent")
+  manualProductAddMode   String   @default("ALLOW") @map("manual_product_add_mode")
+  priceOverrideMode      String   @default("ALWAYS_PIN") @map("price_override_mode")
+  priceOverridePercent   Float    @default(5) @map("price_override_percent")
+  voidTransactionMode    String   @default("ALWAYS_PIN") @map("void_transaction_mode")
+  refundMode             String   @default("ALWAYS_PIN") @map("refund_mode")
+  refundThresholdAmount  Float    @default(50000) @map("refund_threshold_amount")
+  drawerOpenManualMode   String   @default("ALWAYS_PIN") @map("drawer_open_manual_mode")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  tenant                 Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_auth_policies")
+}
+
+model SystemConfig {
+  id               String   @id @default(uuid())
+  key              String   @unique // grace_period_days, additional_tenant_price, max_concurrent_sessions, default_pin_thresholds
+  value            String   // JSON or serialized string
+  description      String?
+  updatedByStaffId String?  @map("updated_by_staff_id")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@map("system_configs")
+}
+
+model Payment {
+  id                      String        @id @default(uuid())
+  tenantId                String        @map("tenant_id")
+  subscriptionId          String?       @map("subscription_id")
+  amount                  Float
+  koinAmount              Float?        @map("koin_amount")
+  rupiahPerKoinAtPurchase Float?        @map("rupiah_per_koin_at_purchase")
+  status                  String        @default("PENDING_VERIFICATION") // PENDING_VERIFICATION | VERIFIED | REJECTED
+  referenceNumber         String        @unique @map("reference_number")
+  verifiedByStaffId       String?       @map("verified_by_staff_id")
+  verifiedAt              DateTime?     @map("verified_at")
+  rejectionReason         String?       @map("rejection_reason")
+  createdAt               DateTime      @default(now()) @map("created_at")
+  updatedAt               DateTime      @updatedAt @map("updated_at")
+
+  tenant                  Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  subscription            Subscription? @relation(fields: [subscriptionId], references: [id])
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([referenceNumber])
+  @@map("payments")
+}
+
+model KoinSetting {
+  id              String   @id @default(uuid())
+  rupiahPerKoin   Float    @default(1000) @map("rupiah_per_koin")
+  minTopupKoin    Float    @default(50) @map("min_topup_koin")
+  bundleDiscounts String?  @map("bundle_discounts") // JSON string
+  updatedBy       String?  @map("updated_by")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("koin_settings")
+}
+
+model KoinPriceHistory {
+  id            String    @id @default(uuid())
+  rupiahPerKoin Float     @map("rupiah_per_koin")
+  effectiveFrom DateTime  @default(now()) @map("effective_from")
+  effectiveTo   DateTime? @map("effective_to")
+
+  @@map("koin_price_histories")
+}
+
+model UserSession {
+  id                String   @id @default(uuid())
+  userId            String   @map("user_id")
+  tenantId          String   @map("tenant_id")
+  deviceFingerprint String   @map("device_fingerprint")
+  ipAddress         String   @map("ip_address")
+  userAgent         String?  @map("user_agent")
+  refreshTokenId    String   @unique @map("refresh_token_id")
+  isRevoked         Boolean  @default(false) @map("is_revoked")
+  loginAt           DateTime @default(now()) @map("login_at")
+  lastActiveAt      DateTime @default(now()) @map("last_active_at")
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant            Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tenantId])
+  @@index([refreshTokenId])
+  @@map("user_sessions")
+}
+
+model IntegrationProvider {
+  id                   String    @id @default(uuid())
+  type                 String    // EMAIL | WHATSAPP
+  providerName         String    @map("provider_name") // e.g. Mailketing, KirimEmail, Fonnte, Wablas
+  credentialsEncrypted String    @map("credentials_encrypted") // AES encrypted JSON credentials
+  isActive             Boolean   @default(false) @map("is_active")
+  lastTestStatus       String?   @map("last_test_status")
+  lastTestedAt         DateTime? @map("last_tested_at")
+  updatedBy            String?   @map("updated_by")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  @@map("integration_providers")
+}
+
+model NotificationTemplate {
+  id           String   @id @default(uuid())
+  type         String   // TRIAL_H7 | TRIAL_H3 | TRIAL_H1 | ENTER_GRACE | ENTER_LIMITED
+  channel      String   // APP | EMAIL | WHATSAPP
+  subject      String?
+  bodyTemplate String   @map("body_template")
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("notification_templates")
+}
+
+model NotificationLog {
+  id        String   @id @default(uuid())
+  tenantId  String   @map("tenant_id")
+  type      String   // TRIAL_H7 | TRIAL_H3 | TRIAL_H1 | ENTER_GRACE | ENTER_LIMITED
+  channel   String   // APP | EMAIL | WHATSAPP
+  recipient String
+  sentAt    DateTime @default(now()) @map("sent_at")
+  status    String   // SENT | FAILED
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, type, channel])
+  @@index([tenantId])
+  @@map("notification_logs")
+}
+
 model Category {
   id        String    @id @default(uuid())
-  tenantId  String
+  tenantId  String    @map("tenant_id")
   name      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
 
   tenant    Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   products  Product[]
@@ -98,20 +284,20 @@ model Category {
 
 model Product {
   id            String            @id @default(uuid())
-  tenantId      String
-  outletId      String?
+  tenantId      String            @map("tenant_id")
+  outletId      String?           @map("outlet_id")
   sku           String?
   barcode       String?
   name          String
-  buyPrice      Float             @default(0)
-  sellPrice     Float
+  buyPrice      Float             @default(0) @map("buy_price")
+  sellPrice     Float             @map("sell_price")
   stock         Float             @default(0)
-  minStockAlert Float             @default(5)
+  minStockAlert Float             @default(5) @map("min_stock_alert")
   unit          String            @default("Pcs")
-  categoryId    String?
-  deletedAt     DateTime?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
+  categoryId    String?           @map("category_id")
+  deletedAt     DateTime?         @map("deleted_at")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
 
   tenant        Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   outlet        Outlet?           @relation(fields: [outletId], references: [id])
@@ -127,26 +313,26 @@ model Product {
 
 model Transaction {
   id              String            @id @default(uuid())
-  tenantId        String
-  outletId        String
-  invoiceNumber   String
+  tenantId        String            @map("tenant_id")
+  outletId        String            @map("outlet_id")
+  invoiceNumber   String            @map("invoice_number")
   date            DateTime          @default(now())
   subtotal        Float
   discount        Float             @default(0)
   tax             Float             @default(0)
   total           Float
-  cashierGiven    Float?
-  changeDue       Float?
-  paymentMethod   String            // CASH | QRIS | TRANSFER | DEBT
+  cashierGiven    Float?            @map("cashier_given")
+  changeDue       Float?            @map("change_due")
+  paymentMethod   String            @map("payment_method") // CASH | QRIS | TRANSFER | DEBT
   status          String            @default("COMPLETED") // COMPLETED | VOID | REFUND
-  cashierId       String?
-  cashierName     String
-  customerId      String?
-  customerName    String?
+  cashierId       String?           @map("cashier_id")
+  cashierName     String            @map("cashier_name")
+  customerId      String?           @map("customer_id")
+  customerName    String?           @map("customer_name")
   notes           String?
-  isAuditFlagged  Boolean           @default(false)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  isAuditFlagged  Boolean           @default(false) @map("is_audit_flagged")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
 
   tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   outlet          Outlet            @relation(fields: [outletId], references: [id])
@@ -160,12 +346,12 @@ model Transaction {
 
 model TransactionItem {
   id            String      @id @default(uuid())
-  transactionId String
-  productId     String
-  productName   String
+  transactionId String      @map("transaction_id")
+  productId     String      @map("product_id")
+  productName   String      @map("product_name")
   quantity      Float
-  buyPrice      Float       @default(0)
-  sellPrice     Float
+  buyPrice      Float       @default(0) @map("buy_price")
+  sellPrice     Float       @map("sell_price")
   discount      Float       @default(0)
   subtotal      Float
 
@@ -178,14 +364,14 @@ model TransactionItem {
 
 model StockLog {
   id            String      @id @default(uuid())
-  tenantId      String
-  outletId      String
-  productId     String
-  productName   String
+  tenantId      String      @map("tenant_id")
+  outletId      String      @map("outlet_id")
+  productId     String      @map("product_id")
+  productName   String      @map("product_name")
   type          String      // IN | OUT | ADJUSTMENT | VOID | TRANSFER
   quantity      Float
-  previousStock Float
-  currentStock  Float
+  previousStock Float       @map("previous_stock")
+  currentStock  Float       @map("current_stock")
   notes         String?
   date          DateTime    @default(now())
 
@@ -202,13 +388,13 @@ model StockLog {
 
 model Customer {
   id           String           @id @default(uuid())
-  tenantId     String
+  tenantId     String           @map("tenant_id")
   name         String
   phone        String?
   address      String?
-  totalDebt    Float            @default(0)
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
+  totalDebt    Float            @default(0) @map("total_debt")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
 
   tenant       Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   debtLogs     DebtPaymentLog[]
@@ -219,10 +405,10 @@ model Customer {
 
 model DebtPaymentLog {
   id            String    @id @default(uuid())
-  tenantId      String
-  customerId    String
+  tenantId      String    @map("tenant_id")
+  customerId    String    @map("customer_id")
   amount        Float
-  paymentMethod String    @default("CASH")
+  paymentMethod String    @default("CASH") @map("payment_method")
   notes         String?
   date          DateTime  @default(now())
 
@@ -235,15 +421,15 @@ model DebtPaymentLog {
 
 model CashSession {
   id             String    @id @default(uuid())
-  tenantId       String
-  outletId       String
-  cashierId      String
-  cashierName    String
-  openedAt       DateTime  @default(now())
-  closedAt       DateTime?
-  openingBalance Float
-  expectedCash   Float?
-  actualCash     Float?
+  tenantId       String    @map("tenant_id")
+  outletId       String    @map("outlet_id")
+  cashierId      String    @map("cashier_id")
+  cashierName    String    @map("cashier_name")
+  openedAt       DateTime  @default(now()) @map("opened_at")
+  closedAt       DateTime? @map("closed_at")
+  openingBalance Float     @map("opening_balance")
+  expectedCash   Float?    @map("expected_cash")
+  actualCash     Float?    @map("actual_cash")
   difference     Float?
   status         String    @default("OPEN") // OPEN | CLOSED
   notes          String?
@@ -259,14 +445,14 @@ model CashSession {
 
 model AuditLog {
   id          String   @id @default(uuid())
-  tenantId    String
-  outletId    String?
+  tenantId    String   @map("tenant_id")
+  outletId    String?  @map("outlet_id")
   timestamp   DateTime @default(now())
-  type        String   // VOID_TRANSACTION | LARGE_DISCOUNT | DRAWER_OPEN | MANUAL_SYNC | LOGIN | PLATFORM_ACCESS
+  type        String   // VOID_TRANSACTION | LARGE_DISCOUNT | DRAWER_OPEN | MANUAL_SYNC | LOGIN | PLATFORM_ACCESS | PLATFORM_SYSTEM_CONFIG_UPDATE | BREAK_GLASS_ACCESS
   details     String
-  cashierName String
-  actorRole   String?  // DEVELOPER | SUPER_ADMIN | OWNER | ADMIN | CASHIER
-  actorId     String?  // ID pelaksana aksi
+  cashierName String   @map("cashier_name")
+  actorRole   String?  @map("actor_role") // DEVELOPER | SUPER_ADMIN | OWNER | ADMIN | CASHIER
+  actorId     String?  @map("actor_id") // ID pelaksana aksi
 
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   outlet      Outlet?  @relation(fields: [outletId], references: [id])
@@ -278,15 +464,15 @@ model AuditLog {
 
 model SyncMutationLog {
   id              String   @id @default(uuid())
-  tenantId        String
-  outletId        String
-  deviceId        String
-  entityType      String   // TRANSACTION | PRODUCT | STOCK_LOG | CUSTOMER | DEBT_PAYMENT | AUDIT_LOG
-  entityId        String
+  tenantId        String   @map("tenant_id")
+  outletId        String   @map("outlet_id")
+  deviceId        String   @map("device_id")
+  entityType      String   @map("entity_type") // TRANSACTION | PRODUCT | STOCK_LOG | CUSTOMER | DEBT_PAYMENT | AUDIT_LOG
+  entityId        String   @map("entity_id")
   action          String   // CREATE | UPDATE | DELETE
   payload         String   // JSON string
-  clientTimestamp DateTime
-  serverTimestamp DateTime @default(now())
+  clientTimestamp DateTime @map("client_timestamp")
+  serverTimestamp DateTime @default(now()) @map("server_timestamp")
 
   tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   outlet          Outlet   @relation(fields: [outletId], references: [id])

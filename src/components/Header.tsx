@@ -50,6 +50,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenShiftModal }) => {
         return 'Pengaturan Toko & Struk';
       case 'backoffice':
         return 'Remote Backoffice & Multi-Cabang';
+      case 'office':
+        return 'Platform Office (Internal)';
       default:
         return 'Transaksi';
     }

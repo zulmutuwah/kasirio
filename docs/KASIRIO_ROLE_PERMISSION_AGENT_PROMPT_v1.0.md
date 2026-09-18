@@ -1,6 +1,8 @@
 # Kasirio Role & Permission System — Agent Prompt (Revisi v2)
 
-> **Tujuan dokumen:** Prompt siap-kirim untuk agent eksternal (misalnya Antigravity) yang akan merancang fitur, database, API, atau dokumentasi terkait sistem role & permission Kasirio. Direvisi dari draf awal setelah CTO review internal — lihat catatan scope di bawah sebelum diterapkan.
+> ⚠️ **DOKUMEN INI SUDAH DIGABUNG & DIGANTIKAN.** Seluruh isi dokumen ini (role hierarchy, permission model, prinsip otorisasi offline) sudah dimasukkan sebagai Bagian 2 & 3 di **[`KASIRIO_CLOUD_BACKEND_BLUEPRINT_v1.0.md`](./KASIRIO_CLOUD_BACKEND_BLUEPRINT_v1.0.md)**, yang juga mencakup arsitektur domain, alur billing, modul office.kasirio.com, keamanan, dan pencegahan kecurangan. **Baca dan eksekusi dokumen itu, bukan dokumen ini.** Isi di bawah ini dipertahankan hanya sebagai arsip sejarah keputusan.
+
+> **Tujuan dokumen (arsip):** Prompt siap-kirim untuk agent eksternal (misalnya Antigravity) yang akan merancang fitur, database, API, atau dokumentasi terkait sistem role & permission Kasirio. Direvisi dari draf awal setelah CTO review internal — lihat catatan scope di bawah sebelum diterapkan.
 
 ---
 

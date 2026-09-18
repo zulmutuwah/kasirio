@@ -8,6 +8,7 @@ import { CustomersView } from './components/customers/CustomersView';
 import { ReportsView } from './components/reports/ReportsView';
 import { SettingsView } from './components/settings/SettingsView';
 import { OwnerDashboardView } from './components/backoffice/OwnerDashboardView';
+import { OfficePortalView } from './components/office/OfficePortalView';
 import { ShiftModal } from './components/shift/ShiftModal';
 import { AddCustomerModal } from './components/customers/AddCustomerModal';
 import { AddEditProductModal } from './components/inventory/AddEditProductModal';
@@ -57,7 +58,7 @@ const AppContent: React.FC = () => {
           {activeTab === 'laporan' && <ReportsView />}
 
           {activeTab === 'backoffice' && <OwnerDashboardView />}
-
+          {activeTab === 'office' && <OfficePortalView />}
           {activeTab === 'pengaturan' && <SettingsView />}
         </main>
       </div>

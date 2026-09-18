@@ -9,7 +9,8 @@ import {
   Store,
   ChevronLeft,
   Keyboard,
-  Building2
+  Building2,
+  ShieldCheck
 } from 'lucide-react';
 import { KeyboardShortcutsModal } from './shortcuts/KeyboardShortcutsModal';
 
@@ -66,6 +67,13 @@ export const Sidebar: React.FC = () => {
       icon: Building2,
       badge: 'Cloud',
       badgeColor: 'bg-emerald-600 text-white',
+    },
+    {
+      id: 'office' as const,
+      label: 'Platform Office',
+      icon: ShieldCheck,
+      badge: 'Staff',
+      badgeColor: 'bg-indigo-600 text-white',
     },
     {
       id: 'pengaturan' as const,

@@ -3,7 +3,67 @@
 Semua perubahan penting pada proyek **Kasirio** akan didokumentasikan dalam berkas ini.
 Format penulisan mengikuti standar [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
----
+## [1.6.0] - 2026-09-18
+### Added - Antarmuka Web Platform Office (`office.kasirio.com`)
+- **Frontend Portal Staf Platform (`src/components/office/OfficePortalView.tsx`):**
+  - Antarmuka visual web khusus staf internal (`DEVELOPER` & `SUPER_ADMIN`) yang terpisah dari aplikasi kasir toko merchant.
+  - Form login staf platform terintegrasi otentikasi dua faktor (MFA/TOTP).
+  - Modal akses darurat **Break-Glass SOP 30 Menit** dengan kewajiban justifikasi operasional tertulis dan countdown timer sesi.
+- **Antrean Verifikasi Pembayaran Koin (Finance Queue):**
+  - Tabel antrean real-time pembayaran transfer berstatus `PENDING_VERIFICATION` dengan pratinjau bukti bayar.
+  - Aksi verifikasi 1-klik yang mengeksekusi *atomic conditional update*, mencegah *double-crediting*, dan memperpanjang masa aktif tenant toko secara instan (+30 hari).
+  - Aksi penolakan pembayaran dengan input alasan resmi yang tercatat di riwayat mutasi merchant.
+- **Direktori & Manajemen Tenant Toko:**
+  - Pemantauan status masa aktif seluruh merchant UMKM terdaftar (`TRIAL`, `ACTIVE`, `GRACE`, `LIMITED`).
+  - Modal detail tenant untuk intervensi perpanjangan masa aktif manual dan ringkasan outlet/staf.
+- **Konfigurasi Dinamis Platform & Integrasi Provider:**
+  - Manajemen runtime parameter platform (`grace_period_days`, biaya koin, kuota sesi perangkat) dengan audit trail otomatis.
+  - Registrasi gateway WhatsApp dan Email dengan kredensial berenkripsi AES-256.
+- **Inisialisasi Database Cloud PostgreSQL (Neon.tech):**
+  - Pengalihan datasource Prisma ke PostgreSQL dengan konfigurasi dual-connection: pooled via PgBouncer (`?sslmode=require&pgbouncer=true`) dan `directUrl` unpooled untuk migrasi.
+  - Berhasil melakukan sinkronisasi skema tabel multi-tenant Kasirio ke branch `production` Neon (`ep-snowy-salad-b32ju0r8.c-4.ap-southeast-1.aws.neon.tech`).
+  - Seluruh test suite (14 test files / 65 unit tests) lulus 100% dan terverifikasi terhubung langsung ke PostgreSQL cloud.
+
+## [1.5.0] - 2026-09-18
+### Added - Fondasi Infrastruktur Cloud Beta & Job Scheduler
+- **Penjadwalan Notifikasi & State Mesin Trial (GCP Cloud Run + Cloud Scheduler):**
+  - Rute baru `POST /api/internal/jobs/subscription-lifecycle` ([`src/server/routes/internal/jobRoutes.ts`](file:///c:/Users/LOQ/Downloads/Kasirio/src/server/routes/internal/jobRoutes.ts)) terlindungi otentikasi header rahasia `X-Cron-Secret` / Bearer token.
+  - Penanganan transisi siklus masa aktif tenant (`TRIAL` $\to$ `GRACE` $\to$ `LIMITED`) dan evaluasi notifikasi berkala (H-7, H-3, H-1, ENTER_GRACE, ENTER_LIMITED) dengan jaminan pengiriman idempoten via `notificationLog`.
+- **Keamanan Akses `office.kasirio.com` & Jalur Darurat (Break-Glass):**
+  - Akses web platform dialihkan ke Cloudflare Access Zero Trust berbasis identitas staf (`@kasirio.com`) + MFA wajib.
+  - Implementasi dan dokumentasi SOP *Break-Glass* darurat 30 menit (`/api/office/auth/break-glass`) dengan pencatatan audit log `BREAK_GLASS_ACCESS` dan broadcast alert darurat.
+  - Dokumentasi isolasi akses DBA/Developer ke database langsung menggunakan restriksi IP CIDR bawaan Supabase/Neon.
+- **Artefak Kontainerisasi & Panduan Deployment:**
+  - `Dockerfile` multi-stage build produksi berbasis `node:22-alpine` dengan user non-root `kasirio` dan automated healthcheck.
+  - `.dockerignore` untuk optimasi context build.
+  - Template `.env.example` terpusat untuk konfigurasi serverless cloud.
+  - Panduan teknis komprehensif pada [`docs/INFRASTRUCTURE_SETUP_GUIDE.md`](file:///c:/Users/LOQ/Downloads/Kasirio/docs/INFRASTRUCTURE_SETUP_GUIDE.md).
+
+## [1.4.0] - 2026-09-17
+### Added - Kasirio Cloud Backend Multi-Tenant Blueprint v1.0 (Fase 2)
+- **Kepatuhan Dokumen Acuan Resmi (`docs/KASIRIO_CLOUD_BACKEND_BLUEPRINT_v1.0.md`):**
+  - Pemisahan ketat: skema lokal Dexie Fase 1 (`src/db/index.ts`, `src/types.ts`) tetap terjaga utuh tanpa modifikasi.
+  - Arsitektur domain final: `kasirio.com` (marketing), `kasirio.id` (301 redirect defensif), `app.kasirio.com` (/pos & /admin dalam satu origin), `office.kasirio.com` (platform terpisah), dan `api.kasirio.com` (namespaced per audience).
+  - Skema database multi-tenant lengkap di `prisma/schema.prisma` & `prisma/schema.postgresql.prisma`: model `Subscription`, `TenantOwnership`, `TenantAuthPolicy`, `SystemConfig`, `Payment`, `KoinSetting`, `KoinPriceHistory`, `UserSession`, `IntegrationProvider`, `NotificationTemplate`, dan `NotificationLog`.
+  - Penjaminan integritas SQL: `outletId` berstatus `NOT NULL` di seluruh transaksi, didukung pembuatan otomatis outlet default ("Toko Utama") saat registrasi tenant.
+- **Autentikasi Dual-Realm & Keamanan Berlapis (`src/server/auth.ts`, `security.ts`):**
+  - Dual JWT signing keys (`JWT_APP_SECRET` vs `JWT_OFFICE_SECRET`) dengan algoritma terpin eksplisit (`HS256`) dan audience checks (`aud: "app"` vs `aud: "office"`).
+  - Host-only cookies tanpa domain wildcard untuk isolasi subdomain mutlak.
+  - Mekanisme darurat **Break-Glass Office** (`/api/office/auth/break-glass`): batas waktu sesi ketat 30 menit, kewajiban catatan justifikasi permanen, dan broadcast alert instan ke seluruh Developer & Super Admin.
+  - Middleware keamanan: normalisasi email (anti-trial abuse pada tag plus dan variasi titik Gmail), rate limiter geser, dan penegakan batas perangkat bersamaan (`checkConcurrentSessionLimit`).
+  - Helper PostgreSQL RLS context (`withTenantContext`) dengan dokumentasi prasyarat PgBouncer Transaction Pooling Mode.
+- **Namespace Endpoint Blueprint v1.0 (`src/server/routes/`):**
+  - `/api/app/auth/register-tenant`: Transaksi atomik pembuatan Owner + Tenant + Default Outlet + Trial Subscription 15 hari.
+  - `/api/app/pos/handshake`: Deteksi manipulasi waktu offline melalui *live clock handshake* (toleransi drift $\pm 300$ detik).
+  - `/api/app/pos/sync`: Idempotensi sinkronisasi batch (`ON CONFLICT DO NOTHING`), kalkulasi ulang nilai transaksi di server, dan isolasi RLS tenant.
+  - `/api/app/admin/policy` & `/api/app/admin/koin`: Kebijakan PIN Gate Owner dan submit transfer Koin dengan `referenceNumber` unik di seluruh sistem.
+  - `/api/office/tenants`: Manajemen tenant dengan pencatatan audit log yang transparan kepada Owner tenant.
+  - `/api/office/payments`: Antrean verifikasi pembayaran dengan *atomic conditional update* (`status='PENDING_VERIFICATION'`) pencegah double-crediting.
+  - `/api/office/configs`: CRUD konfigurasi dinamis platform (Bagian 8) dengan pencatatan audit log platform staf otomatis.
+  - `/api/office/providers`: Integrasi provider Email/WA berenkripsi AES credentials.
+- **Pengujian & Kualitas:**
+  - Penambahan test suite `src/tests/cloudBlueprintBackend.test.ts` (11 tests). Total **13 test suites (60 unit tests)** Vitest lulus 100%.
+  - Seluruh codebase terverifikasi bebas error kompilasi TypeScript (`tsc --noEmit`).
 
 ## [1.3.0] - 2026-09-17
 ### Added - Sistem Role & Permission Multi-Tenant (RBAC & PBAC)

@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions, VerifyOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'kasirio-fallback-dev-secret-key-2026';
+// Signing keys terpisah per realm untuk defense-in-depth (Blueprint Bagian 1 & 6)
+export const JWT_APP_SECRET = process.env.JWT_APP_SECRET || process.env.JWT_SECRET || 'kasirio-app-secret-realm-2026';
+export const JWT_OFFICE_SECRET = process.env.JWT_OFFICE_SECRET || 'kasirio-office-secret-realm-2026';
 
 export type PlatformRole = 'DEVELOPER' | 'SUPER_ADMIN';
 export type TenantRole = 'OWNER' | 'ADMIN' | 'CASHIER';
@@ -13,8 +15,13 @@ export interface AuthUserPayload {
   name: string;
   role: KasirioRole;
   tenantId: string;
-  outletId?: string | null;
+  outletId: string; // Wajib non-null sesuai pencegahan gotcha SQL
   permissions?: string[];
+  sessionId?: string;
+  aud?: 'app' | 'office';
+  isMfaVerified?: boolean;
+  isBreakGlass?: boolean;
+  breakGlassJustification?: string;
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -23,7 +30,7 @@ export interface AuthenticatedRequest extends Request {
 
 /**
  * Katalog Permission Resmi Kasirio (RBAC/PBAC)
- * Mengacu pada docs/KASIRIO_ROLE_PERMISSION_AGENT_PROMPT_v1.0.md
+ * Mengacu pada Blueprint v1.0 Bagian 2
  */
 export const KASIRIO_PERMISSIONS = {
   // Produk & Katalog
@@ -114,7 +121,6 @@ export interface PermissionOverrideItem {
 /**
  * Resolusi Akhir Permission Pengguna:
  * Final Permissions = (Default Role Permissions) + (Grants) - (Revokes)
- * Owner, Developer, Super Admin selalu mempertahankan izin penuh.
  */
 export function resolveUserPermissions(
   role: string,
@@ -137,8 +143,49 @@ export function resolveUserPermissions(
   return Array.from(resolved);
 }
 
+/**
+ * Penerbitan Token App Realm (app.kasirio.com)
+ * aud: "app", masa berlaku pendek (15m - 24h)
+ */
+export function generateAppToken(payload: Omit<AuthUserPayload, 'aud'>, expiresIn: any = '15m'): string {
+  const options: SignOptions = {
+    algorithm: 'HS256',
+    audience: 'app',
+    expiresIn,
+  };
+  return jwt.sign(payload, JWT_APP_SECRET, options);
+}
+
+/**
+ * Penerbitan Token Office Realm (office.kasirio.com)
+ * aud: "office", masa berlaku pendek (15m - 1h), wajib MFA
+ */
+export function generateOfficeToken(
+  payload: Omit<AuthUserPayload, 'aud'>,
+  expiresIn: any = '15m',
+  isBreakGlass = false,
+  justification?: string
+): string {
+  const fullPayload = {
+    ...payload,
+    isBreakGlass,
+    breakGlassJustification: justification,
+  };
+
+  const options: SignOptions = {
+    algorithm: 'HS256',
+    audience: 'office',
+    expiresIn: isBreakGlass ? '30m' : expiresIn, // Break glass strict max 30 mins
+  };
+
+  return jwt.sign(fullPayload, JWT_OFFICE_SECRET, options);
+}
+
+/**
+ * Legacy generator untuk kompatibilitas ke belakang
+ */
 export function generateToken(payload: AuthUserPayload, expiresIn: any = '7d'): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn });
+  return generateAppToken(payload, expiresIn);
 }
 
 export async function hashSecret(secret: string): Promise<string> {
@@ -151,27 +198,121 @@ export async function verifySecret(secret: string, hashed: string): Promise<bool
 }
 
 /**
- * Middleware untuk memastikan request membawa JWT Token yang valid
+ * Ekstraksi token dari Authorization Bearer header atau Host-Only Cookie
  */
-export function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+function extractToken(req: Request, cookieName: string): string | null {
   const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authHeader.substring(7);
+  }
+  // Cookie fallback (jika cookie-parser aktif atau dari req.headers.cookie)
+  const cookieHeader = req.headers.cookie;
+  if (cookieHeader) {
+    const cookies = Object.fromEntries(
+      cookieHeader.split(';').map((c) => {
+        const [k, ...v] = c.trim().split('=');
+        return [k, decodeURIComponent(v.join('='))];
+      })
+    );
+    if (cookies[cookieName]) {
+      return cookies[cookieName];
+    }
+  }
+  return null;
+}
+
+/**
+ * Middleware Otorisasi App Realm (api.kasirio.com/api/app/*)
+ * Memvalidasi aud: "app", signing key JWT_APP_SECRET, algoritma HS256
+ */
+export function authenticateApp(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  const token = extractToken(req, 'kasirio_app_token');
 
   if (!token) {
-    return res.status(401).json({ error: 'Akses ditolak. Token otentikasi tidak ditemukan.' });
+    return res.status(401).json({ error: 'Akses ditolak. Token otentikasi aplikasi kasir tidak ditemukan.' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+  const verifyOpts: VerifyOptions = {
+    algorithms: ['HS256'],
+    audience: 'app',
+  };
+
+  jwt.verify(token, JWT_APP_SECRET, verifyOpts, (err, decoded) => {
     if (err || !decoded) {
-      return res.status(403).json({ error: 'Token tidak valid atau telah kedaluwarsa.' });
+      return res.status(403).json({ error: 'Token aplikasi tidak valid, audiens salah, atau telah kedaluwarsa.' });
     }
-    req.user = decoded as AuthUserPayload;
+    const userPayload = decoded as AuthUserPayload;
+    if (!['OWNER', 'ADMIN', 'CASHIER', 'MANAGER'].includes(userPayload.role)) {
+      return res.status(403).json({ error: 'Akses ditolak. Peran tidak diizinkan di modul app.' });
+    }
+    req.user = userPayload;
     next();
   });
 }
 
 /**
- * Middleware untuk membatasi akses endpoint berdasarkan peran (RBAC)
+ * Middleware Otorisasi Office Realm (api.kasirio.com/api/office/*)
+ * Memvalidasi aud: "office", signing key JWT_OFFICE_SECRET, algoritma HS256
+ * Wajib role DEVELOPER atau SUPER_ADMIN, serta cek MFA
+ */
+export function authenticateOffice(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  const token = extractToken(req, 'kasirio_office_token');
+
+  if (!token) {
+    return res.status(401).json({ error: 'Akses ditolak. Token otentikasi platform office tidak ditemukan.' });
+  }
+
+  const verifyOpts: VerifyOptions = {
+    algorithms: ['HS256'],
+    audience: 'office',
+  };
+
+  jwt.verify(token, JWT_OFFICE_SECRET, verifyOpts, (err, decoded) => {
+    if (err || !decoded) {
+      return res.status(403).json({ error: 'Token platform office tidak valid, bukan audiens office, atau telah kedaluwarsa.' });
+    }
+    const userPayload = decoded as AuthUserPayload;
+    if (!['DEVELOPER', 'SUPER_ADMIN'].includes(userPayload.role)) {
+      return res.status(403).json({ error: 'Akses ditolak. Endpoint khusus staf internal platform (Developer/Super Admin).' });
+    }
+    // Blueprint Bagian 2.1 & 5.5: Staf platform wajib status MFA terverifikasi (kecuali sesi break-glass darurat)
+    if (!userPayload.isMfaVerified && !userPayload.isBreakGlass) {
+      return res.status(403).json({ error: 'Akses ditolak. Otentikasi dua faktor (MFA) wajib untuk platform office.' });
+    }
+
+    req.user = userPayload;
+    next();
+  });
+}
+
+/**
+ * Middleware umum backward compatibility
+ */
+export function authenticateToken(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  // Coba verifikasi dengan app secret terlebih dahulu, lalu office secret jika gagal
+  const token = extractToken(req, 'kasirio_app_token') || extractToken(req, 'kasirio_office_token');
+
+  if (!token) {
+    return res.status(401).json({ error: 'Akses ditolak. Token otentikasi tidak ditemukan.' });
+  }
+
+  jwt.verify(token, JWT_APP_SECRET, { algorithms: ['HS256'] }, (err, decoded) => {
+    if (!err && decoded) {
+      req.user = decoded as AuthUserPayload;
+      return next();
+    }
+    jwt.verify(token, JWT_OFFICE_SECRET, { algorithms: ['HS256'] }, (err2, decoded2) => {
+      if (!err2 && decoded2) {
+        req.user = decoded2 as AuthUserPayload;
+        return next();
+      }
+      return res.status(403).json({ error: 'Token tidak valid atau telah kedaluwarsa.' });
+    });
+  });
+}
+
+/**
+ * Middleware RBAC
  */
 export function requireRole(allowedRoles: KasirioRole[]) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -179,7 +320,6 @@ export function requireRole(allowedRoles: KasirioRole[]) {
       return res.status(401).json({ error: 'Pengguna belum terotentikasi.' });
     }
 
-    // Role mapping: MANAGER dianggap sama dengan ADMIN
     const userRole = req.user.role === 'MANAGER' ? 'ADMIN' : req.user.role;
     const normalizedAllowed = allowedRoles.map((r) => (r === 'MANAGER' ? 'ADMIN' : r));
 
@@ -194,7 +334,7 @@ export function requireRole(allowedRoles: KasirioRole[]) {
 }
 
 /**
- * Middleware untuk membatasi akses endpoint berdasarkan permission spesifik (PBAC)
+ * Middleware PBAC
  */
 export function requirePermission(requiredPermission: string) {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
@@ -202,7 +342,6 @@ export function requirePermission(requiredPermission: string) {
       return res.status(401).json({ error: 'Pengguna belum terotentikasi.' });
     }
 
-    // Owner, Developer, Super Admin selalu lolos
     if (['OWNER', 'DEVELOPER', 'SUPER_ADMIN'].includes(req.user.role)) {
       return next();
     }

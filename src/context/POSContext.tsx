@@ -32,8 +32,8 @@ interface Toast {
 
 interface POSContextType {
   // Navigation
-  activeTab: 'kasir' | 'produk' | 'pelanggan' | 'laporan' | 'pengaturan' | 'backoffice';
-  setActiveTab: (tab: 'kasir' | 'produk' | 'pelanggan' | 'laporan' | 'pengaturan' | 'backoffice') => void;
+  activeTab: 'kasir' | 'produk' | 'pelanggan' | 'laporan' | 'pengaturan' | 'backoffice' | 'office';
+  setActiveTab: (tab: 'kasir' | 'produk' | 'pelanggan' | 'laporan' | 'pengaturan' | 'backoffice' | 'office') => void;
 
   // Products
   products: Product[];
@@ -127,7 +127,7 @@ interface POSContextType {
 const POSContext = createContext<POSContextType | undefined>(undefined);
 
 export const POSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [activeTab, setActiveTab] = useState<'kasir' | 'produk' | 'pelanggan' | 'laporan' | 'pengaturan' | 'backoffice'>('kasir');
+  const [activeTab, setActiveTab] = useState<'kasir' | 'produk' | 'pelanggan' | 'laporan' | 'pengaturan' | 'backoffice' | 'office'>('kasir');
 
   // Core Data States
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);

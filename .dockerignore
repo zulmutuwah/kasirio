@@ -1,0 +1,17 @@
+node_modules
+.git
+.github
+.vscode
+dist
+*.log
+.env
+.env.*
+!.env.example
+coverage
+.gemini
+tests
+docs
+capacitor.config.ts
+android
+ios
+src-tauri
